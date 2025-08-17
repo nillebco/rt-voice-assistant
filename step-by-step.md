@@ -2,6 +2,8 @@
 
 ## web app
 
+we could use https://github.com/ricky0123/vad/tree/master/test-site as a starting canvas
+
 ```sh
 npm create vite@latest rt-voice-assistant -- --template react-ts
 cd rt-voice-assistant
@@ -15,61 +17,24 @@ write the code handling the vad
 https://docs.vad.ricky0123.com/user-guide/api/#support_2
 
 ```typescript
-import { useMicVAD } from "@ricky0123/vad-react"
+import { useMicVAD, utils } from "@ricky0123/vad-react"
+import { ttsApiClient, type TranscriptionResponse } from '../services/ttsApi';
 
-const MyComponent = () => {
-const vad = useMicVAD({
-    onSpeechEnd: (audio: audio: Float32Array) => {
-    console.log("User stopped talking")
-    },
-})
-return <div>{vad.userSpeaking && "User is speaking"}</div>
+const VoiceActivityDetection = () => {
+    const vad = useMicVAD({
+        onSpeechEnd: (audio: audio: Float32Array) => {
+            const wav = utils.encodeWAV(audio);
+            const wavBlob = new Blob([wav], { type: 'audio/wav' })
+            const result = await ttsApiClient.transcribeAudioBlob(
+                wavBlob,
+                'recording.webm',
+                options.model || 'base'
+            );
+            // result.text contains the transcription
+        },
+    })
+    return <div>{vad.userSpeaking && "User is speaking"}</div>
 }
-```
-
-convert the audio to a wav
-
-```ts
-const convertFloat32ArrayToWAV = (audio: Float32Array, sampleRate: number = 16000): Blob => {
-  const numChannels = 1; // Mono audio
-  
-  // Create WAV header
-  const bufferLength = audio.length * 2; // 16-bit samples
-  const arrayBuffer = new ArrayBuffer(44 + bufferLength);
-  const view = new DataView(arrayBuffer);
-  
-  // WAV file header
-  const writeString = (offset: number, string: string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  };
-  
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + bufferLength, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * 2, true);
-  view.setUint16(32, numChannels * 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, 'data');
-  view.setUint32(40, bufferLength, true);
-  
-  // Convert Float32Array to 16-bit PCM and write to buffer
-  let offset = 44;
-  for (let i = 0; i < audio.length; i++) {
-    const sample = Math.max(-1, Math.min(1, audio[i]));
-    const pcmSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-    view.setInt16(offset, pcmSample, true);
-    offset += 2;
-  }
-  
-  return new Blob([arrayBuffer], { type: 'audio/wav' });
-};
 ```
 
 write a client for the transcription API

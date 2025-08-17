@@ -1,5 +1,5 @@
 import "./App.css";
-import { useMicVAD } from "@ricky0123/vad-react";
+import { useMicVAD, utils } from "@ricky0123/vad-react";
 import { useTranscription } from "./hooks/useTranscription";
 import { useState } from "react";
 
@@ -8,53 +8,6 @@ interface TranscriptionItem {
   text: string;
   timestamp: Date;
 }
-
-/**
- * Converts Float32Array audio data to WAV format
- * @param audio - Float32Array containing raw audio samples
- * @param sampleRate - Sample rate in Hz (default: 16000)
- * @returns Blob containing WAV audio data
- */
-const convertFloat32ArrayToWAV = (audio: Float32Array, sampleRate: number = 16000): Blob => {
-  const numChannels = 1; // Mono audio
-  
-  // Create WAV header
-  const bufferLength = audio.length * 2; // 16-bit samples
-  const arrayBuffer = new ArrayBuffer(44 + bufferLength);
-  const view = new DataView(arrayBuffer);
-  
-  // WAV file header
-  const writeString = (offset: number, string: string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  };
-  
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + bufferLength, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * 2, true);
-  view.setUint16(32, numChannels * 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, 'data');
-  view.setUint32(40, bufferLength, true);
-  
-  // Convert Float32Array to 16-bit PCM and write to buffer
-  let offset = 44;
-  for (let i = 0; i < audio.length; i++) {
-    const sample = Math.max(-1, Math.min(1, audio[i]));
-    const pcmSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-    view.setInt16(offset, pcmSample, true);
-    offset += 2;
-  }
-  
-  return new Blob([arrayBuffer], { type: 'audio/wav' });
-};
 
 const VoiceActivityDetection = () => {
   const [transcriptionHistory, setTranscriptionHistory] = useState<TranscriptionItem[]>([]);
@@ -85,8 +38,8 @@ const VoiceActivityDetection = () => {
       console.log("User stopped talking, audio length:", audio.length);
       
       try {
-        // Convert Float32Array to WAV format and transcribe
-        const wavBlob = convertFloat32ArrayToWAV(audio);
+        const wav = utils.encodeWAV(audio);
+        const wavBlob = new Blob([wav], { type: 'audio/wav' })
         await transcribeAudio(wavBlob);
       } catch (err) {
         console.error('Failed to transcribe audio:', err);
