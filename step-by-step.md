@@ -151,4 +151,10 @@ git clone https://github.com/nillebco/fast-openai-like-transcription-server.git
 start ollama
 download a model (ie. gemma3 3b)
 
+
 start the kokoroTTS server
+
+```sh
+uv run kokoro_onnx_api.py
+# now you can visit https://stt.localhost/docs
+```
