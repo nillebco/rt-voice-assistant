@@ -6,7 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.3.2",
-    "setuptools>=80.9.0",
+    "setuptools<81",
+    "silero-vad>=5.1.2",
     "sounddevice>=0.5.2",
     "soundfile>=0.13.1",
     "webrtcvad>=2.0.10",

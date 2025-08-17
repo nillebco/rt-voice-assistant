@@ -1,4 +1,4 @@
-# requires: sounddevice soundfile numpy
+# requires: sounddevice soundfile numpy silero-vad webrtcvad
 
 import queue
 import signal
@@ -23,8 +23,13 @@ q = queue.Queue(maxsize=100)
 # Graceful shutdown flag
 running = True
 
-# Global VAD instance (created once)
-vad = None
+# Global VAD instances (created once)
+vad_silero = None
+silero_iter = None
+_silero_buf = np.zeros(0, dtype=np.float32)
+SILERO_MIN_SAMPLES = 512 if SAMPLERATE == 16000 else 256
+
+vad_webrtc = None  # for WebRTC VAD
 
 
 def handle_sigint(sig, frame):
@@ -56,25 +61,72 @@ def process_chunk(chunk: np.ndarray):
     return dbfs
 
 
-def process_vad(chunk: np.ndarray):
+def process_vad_silero(chunk: np.ndarray) -> bool:
     """
-    Process the audio chunk using the VAD.
+    Stream Silero VAD with 512-sample hops @16 kHz.
+    Keeps internal buffer to guarantee min size.
+    """
+    global vad_silero, silero_iter, _silero_buf
+
+    # Init once
+    if vad_silero is None:
+        from silero_vad import load_silero_vad, VADIterator
+        vad_silero = load_silero_vad()
+        silero_iter = VADIterator(vad_silero, sampling_rate=SAMPLERATE)
+
+    # Ensure mono int16 -> float32 [-1, 1] 1-D
+    if chunk.ndim > 1:
+        chunk = chunk[:, 0]
+    if chunk.dtype != np.int16:
+        chunk = chunk.astype(np.int16)
+    x = chunk.astype(np.float32) / 32768.0
+
+    # Append to rolling buffer
+    _silero_buf = np.concatenate([_silero_buf, x])
+
+    speech_detected = False
+    # Feed fixed-size slices to Silero (>=512)
+    while len(_silero_buf) >= SILERO_MIN_SAMPLES:
+        frame = _silero_buf[:SILERO_MIN_SAMPLES]
+        _silero_buf = _silero_buf[SILERO_MIN_SAMPLES:]
+
+        # NOTE: do NOT reuse the WebRTC batcher here; call Silero directly
+        out = silero_iter(frame, return_seconds=False)
+        if out is not None:  # Silero returns dict when a segment closes
+            speech_detected = True
+
+    # Do NOT call reset_states() every chunk; only when you want to flush
+    return speech_detected
+
+
+def _is_speech_webrtc(chunk_bytes: list[bytes]):
+    try:
+        is_speech = vad_webrtc.is_speech(chunk_bytes, SAMPLERATE)
+        return is_speech
+    except Exception as e:
+        print(f"WebRTC VAD processing error: {e}")
+        return False
+
+
+def process_vad_webrtc(chunk: np.ndarray):
+    """
+    Process the audio chunk using WebRTC VAD.
     Ensures WebRTC VAD requirements:
     - 16-bit mono PCM audio
     - Supported sample rates: 8000, 16000, 32000, or 48000 Hz
     - Frame duration: 10, 20, or 30 ms
     """
-    global vad
-    
+    global vad_webrtc
+
     # Initialize VAD once
-    if vad is None:
-        vad = webrtcvad.Vad()
-        vad.set_mode(1)  # Aggressiveness level 0-3
-    
+    if vad_webrtc is None:
+        vad_webrtc = webrtcvad.Vad()
+        vad_webrtc.set_mode(1)  # Aggressiveness level 0-3
+
     # Ensure we have mono audio (take first channel if stereo)
     if chunk.ndim > 1 and chunk.shape[1] > 1:
         chunk = chunk[:, 0]
-    
+
     # Ensure 16-bit PCM format
     if chunk.dtype != np.int16:
         chunk = chunk.astype(np.int16)
@@ -107,12 +159,7 @@ def process_vad(chunk: np.ndarray):
     # Convert to bytes for WebRTC VAD
     chunk_bytes = chunk.tobytes()
     
-    try:
-        is_speech = vad.is_speech(chunk_bytes, SAMPLERATE)
-        return is_speech, frame_duration_ms
-    except Exception as e:
-        print(f"VAD processing error: {e}")
-        return False, frame_duration_ms
+    return _is_speech_webrtc(chunk_bytes)
 
 
 def main():
@@ -159,8 +206,13 @@ def main():
                 print(f"Level ~ {avg_dbfs:6.1f} dBFS")
                 meter_accum = 0
 
-            is_speech, frame_duration = process_vad(chunk)
-            print(f"VAD: {is_speech} (frame: {frame_duration}ms)")
+            is_speech = process_vad_silero(chunk)
+            if is_speech:
+                print("Silero: Speech detected")
+
+            is_speech = process_vad_webrtc(chunk)
+            if is_speech:
+                print("WebRTC: Speech detected")
 
     print("\nStopped. File closed.")
 
