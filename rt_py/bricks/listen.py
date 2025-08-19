@@ -1,0 +1,86 @@
+import queue
+import signal
+import sys
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Callable
+
+import numpy as np
+import sounddevice as sd
+import soundfile as sf
+
+from .sample_callbacks import RMSMeter, multiple_callbacks, sample_process_frame
+
+
+@dataclass
+class ListenOptions:
+    samplerate: int = 16000
+    channels: int = 1
+    frames_per_callback: int = 1024
+    filename: str = f"capture_{datetime.now().strftime('%Y%m%d-%H%M%S')}.wav"
+    dtype: str = "int16"
+    process_frame: Callable[[np.ndarray], None] = None
+
+
+# Thread-safe queue to shuttle audio from callback to main thread
+q = queue.Queue(maxsize=100)
+
+# Graceful shutdown flag
+running = True
+
+
+def handle_sigint(sig, frame):
+    global running
+    running = False
+
+
+signal.signal(signal.SIGINT, handle_sigint)
+
+
+def audio_callback(indata, frames, time, status):
+    """Called by sounddevice in a high-priority audio thread."""
+    if status:
+        # Over/underruns, etc.
+        print(f"[Audio status] {status!s}", file=sys.stderr)
+    # Copy needed because indata is reused by the host
+    q.put(indata.copy(), block=False)
+
+
+def listen(options: ListenOptions):
+    global running
+    print(f"Recording -> {options.filename}\nPress Ctrl+C to stop.")
+    if not options.process_frame:
+        print("WARN: No process_frame callback provided.")
+
+    # Open an incremental writer; no need to know total duration
+    with (
+        sf.SoundFile(
+            options.filename,
+            mode="w",
+            samplerate=options.samplerate,
+            channels=options.channels,
+            subtype="PCM_16",
+        ) as wav,
+        sd.InputStream(
+            samplerate=options.samplerate,
+            channels=options.channels,
+            dtype=options.dtype,
+            blocksize=options.frames_per_callback,
+            callback=audio_callback,
+            latency="low",  # hint; driver may choose nearest
+        ),
+    ):
+        while running:
+            try:
+                chunk = q.get(timeout=0.5)  # ndarray[int16] (frames, channels)
+            except queue.Empty:
+                continue
+
+            # Write chunk to disk (non-blocking wrt audio thread)
+            wav.write(chunk)
+
+            if options.process_frame:
+                options.process_frame(chunk)
+
+    print("\nStopped. File closed.")
+
