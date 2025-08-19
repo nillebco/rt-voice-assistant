@@ -112,7 +112,7 @@ class Transcriber:
             language="en",
             input_wav_path=filename,
         )
-        print(transcription)
+        print(f"Transcription: {transcription}")
 
     def __call__(self, frame: np.ndarray):
         self.frame_processor.process(frame)
