@@ -1,3 +1,12 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "onnxruntime",
+#     "kokoro-onnx",
+#     "sounddevice",
+# ]
+# ///
+
 import signal
 import sys
 
