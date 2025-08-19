@@ -10,14 +10,18 @@
 # ///
 
 from datetime import datetime
+import logging
 
 import numpy as np
 import soundfile as sf
 
-from ..bricks.stt_whisperx import transcribe
+from ..bricks.stt_whisper_cpp import transcribe
 from ..bricks.listen import ListenOptions, listen
 from ..bricks.vad_silero import process_prob
 from ..bricks.frame_processor import Callbacks, FrameProcessor, FrameProcessorOptions
+
+logger = logging.getLogger("rt_py.cli.transcribe")
+logger.setLevel(logging.DEBUG)
 
 
 SR = 16000
@@ -82,31 +86,33 @@ class Transcriber:
         # print(f"Frame processed: {p_speech:.2f}")
 
     def on_vad_misfire(self):
-        print("VAD misfire")
+        logger.info("VAD misfire")
 
     def on_speech_start(self):
-        print("Speech start")
+        logger.info("Speech start")
 
     def on_speech_real_start(self):
-        print("Speech real start")
+        logger.info("Speech real start")
 
     def on_speech_end(self, frame: np.ndarray):
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        filename = self.filename_fmt.format(timestamp)
+        
         with sf.SoundFile(
-            self.filename_fmt.format(datetime.now().strftime("%Y%m%d-%H%M%S")),
+            filename,
             mode="w",
             samplerate=16000,
             channels=1,
             subtype="FLOAT",
         ) as wav:
             wav.write(prepare_for_write(frame))
-            transcription = transcribe(
-                model="small",
-                language="en",
-                input_wav_path=self.filename_fmt.format(
-                    datetime.now().strftime("%Y%m%d-%H%M%S")
-                ),
-            )
-            print(transcription)
+
+        transcription = transcribe(
+            model="small",
+            language="en",
+            input_wav_path=filename,
+        )
+        print(transcription)
 
     def __call__(self, frame: np.ndarray):
         self.frame_processor.process(frame)
