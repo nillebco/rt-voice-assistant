@@ -34,7 +34,7 @@ uv run rt_py.cli
 
 ## Slides
 
-The slides presented are in the doc/slides folder. you can run `npm i && npm run start` to get the Workshop experience. Otherwise just open the md file in that folder. The architexture diagram is in the .excalidraw file.
+The slides presented are in the doc/slides folder. you can run `npm i && npm run start` to get the Workshop experience (on http://localhost:12345). Otherwise just open the md file in that folder. The architexture diagram is in the .excalidraw file.
 
 FIXME: copy the latest slides.
 
