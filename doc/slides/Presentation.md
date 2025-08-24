@@ -18,7 +18,7 @@ LLMs are good at what software isn't and viceversa. Think of them as a set of st
 
 ---
 ## Architecture
- ![[LocalFirst Real Time Voice Assistant.excalidraw]]
+ <img src=architecture.png>
 
 ---
 ## Prerequisites
