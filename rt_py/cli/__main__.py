@@ -22,7 +22,7 @@ import sounddevice as sd
 from ..bricks.stt.whispercpp import transcribe
 from ..bricks.listen import ListenOptions, listen
 from ..bricks.vad.silero import process_prob
-from ..bricks.llm import get_client, clean_thinking
+from ..bricks.llm import get_client, clean_thinking, trim_to_budget
 from ..bricks.frame_processor import Callbacks, FrameProcessor, FrameProcessorOptions
 from ..bricks.audio import prepare_for_write
 from ..bricks.tts import get_tts_engine, on_startup as on_startup_tts
@@ -37,6 +37,9 @@ on_startup_tts()
 
 MODEL = os.getenv("MODEL", "openai/gpt-4o")
 URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", f"You are a concise, helpful assistant. Today it's {datetime.now().strftime('%Y-%m-%d')}.")
+
+HISTORY = []
 
 class Transcriber:
     def __init__(self, filename_fmt: str):
@@ -91,14 +94,18 @@ class Transcriber:
         print(f"Transcription: {transcription}")
 
         client = get_client(url=URL)
+        HISTORY.append({"role": "user", "content": transcription})
+        messages = trim_to_budget(HISTORY, SYSTEM_PROMPT, budget=6000)
+        print(f"Messages: {messages}")
         response = client.chat.completions.create(
             model=MODEL,
-            messages=[{"role": "user", "content": transcription}],
+            messages=messages,
         )
         text = response.choices[0].message.content
         print(f"Response: {text}")
 
         audible_text = clean_thinking(text)
+        HISTORY.append({"role": "assistant", "content": audible_text})
         tts = get_tts_engine()
         samples, sample_rate = tts.create(audible_text, voice="af_heart")
         sd.play(samples, sample_rate)
