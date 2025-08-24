@@ -32,7 +32,7 @@ q = queue.Queue(maxsize=MAX_SIZE)
 
 # Graceful shutdown flag
 running = True
-
+processing = False
 
 def handle_sigint(sig, frame):
     global running
@@ -47,6 +47,10 @@ def audio_callback(indata, frames, time, status):
     if status:
         # Over/underruns, etc.
         print(f"[Audio status] {status!s}", file=sys.stderr)
+
+    if processing:
+        return
+
     # Copy needed because indata is reused by the host
     try:
         q.put_nowait(indata.copy())
@@ -65,7 +69,7 @@ def audio_callback(indata, frames, time, status):
 
 
 def listen(options: ListenOptions):
-    global running
+    global running, processing
     print(f"Recording -> {options.filename}\nPress Ctrl+C to stop.")
     if not options.process_frame:
         print("WARN: No process_frame callback provided.")
@@ -98,6 +102,8 @@ def listen(options: ListenOptions):
             wav.write(chunk)
 
             if options.process_frame:
+                processing = True
                 options.process_frame(chunk)
+                processing = False
 
     print("\nStopped. File closed.")
