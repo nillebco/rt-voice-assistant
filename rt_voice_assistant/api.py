@@ -22,9 +22,9 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from starlette.websockets import WebSocketState
 
-from rt_py.bricks.stt.whispercpp import transcribe
-from rt_py.bricks.tts import get_tts_engine
-from rt_py.bricks.tts import on_startup as on_startup_tts
+from .bricks.stt.whispercpp import transcribe
+from .bricks.tts import get_tts_engine
+from .bricks.tts import on_startup as on_startup_tts
 
 app = FastAPI(
     title="RealTime Voice Assistant API",

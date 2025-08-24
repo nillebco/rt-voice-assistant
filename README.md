@@ -40,7 +40,7 @@ WHISPER_CPP_DIR="/Users/nilleb/whisper.cpp"
 
 ```sh
 uv sync
-uv run rt_py.cli
+uv run rt_voice_assistant.cli
 ```
 
 ## Slides
@@ -49,7 +49,7 @@ The slides presented are in the doc/slides folder. Also: You can view them on [R
 
 ## Repository structure
 
-The repository contains a rt_py folder containing the code that we will try to implement during the workshop.
+The repository contains a rt_voice_assistant folder containing the code that we will try to implement during the workshop.
 
 ### bricks
 
@@ -75,9 +75,9 @@ The `cli` folder contains test CLI (command line interface) tools to verify what
 - `ask`: textual assistant. Type your questions you will get the configured AI to answer them.
 - `__main__`: the rt voice assistant
 
-Every one of these samples can be run with a command like `uv run rt_py.cli.SAMPLE` (exception made for the last for which you type just `uv run rt_py.cli`).
+Every one of these samples can be run with a command like `uv run rt_voice_assistant.cli.SAMPLE` (exception made for the last for which you type just `uv run rt_voice_assistant.cli`).
 
-The `api` file contains a sample FastAPI API exposing a few endpoints (inlcuding a websocket). Launch it with `uv run -m rt_py.api --port 12347`.
+The `api` file contains a sample FastAPI API exposing a few endpoints (inlcuding a websocket). Launch it with `uv run -m rt_voice_assistant.api --port 12347`.
 
 ### web application
 

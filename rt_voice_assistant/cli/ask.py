@@ -12,7 +12,7 @@ import sys
 
 from dotenv import load_dotenv
 
-from rt_py.bricks.llm import get_client, trim_to_budget
+from ..bricks.llm import get_client, trim_to_budget
 
 load_dotenv()
 
