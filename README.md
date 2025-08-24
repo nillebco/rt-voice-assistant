@@ -40,7 +40,7 @@ WHISPER_CPP_DIR="/Users/nilleb/whisper.cpp"
 
 ```sh
 uv sync
-uv run rt_voice_assistant.cli
+uv run -m rt_voice_assistant.cli
 ```
 
 ## Slides
@@ -94,9 +94,9 @@ curl -L -o models/mixtral-8x7b-instruct.Q4_K_M.gguf \
   https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
 curl -L -o models/qwen2-1_5b-instruct.Q4_K_M.gguf \
   https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1_5b-instruct-q4_k_m.gguf
-docker run -v ./models:/models -p 12346:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/mixtral-8x7b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
-docker run -v ./models:/models -p 12346:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/qwen2-1_5b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
-curl http://localhost:12346/v1/chat/completions \
+docker run -v ./models:/models -p 11434:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/mixtral-8x7b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
+docker run -v ./models:/models -p 11434:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/qwen2-1_5b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
+curl http://localhost:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-local" \
   -d '{
@@ -152,11 +152,21 @@ Your .env file will be used to store the configuration
 
 ### Use a local ollama instance
 
-No need to set a secret key - just add these lines to your .env file
+No need for a secret key - just add these lines to your .env file
 
 ```sh
 OPENAI_BASE_URL=http://localhost:11434/v1
 MODEL=qwen3:30b
+```
+
+### Use a local llama.cpp instance
+
+No need for a secret key - just add these lines to your .env file
+
+```sh
+OPENAI_BASE_URL=http://localhost:11434/v1
+# match your local model file name
+MODEL=qwen2-1_5b-instruct.Q4_K_M.gguf
 ```
 
 ## Future evolutions

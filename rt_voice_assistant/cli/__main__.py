@@ -114,7 +114,7 @@ class Transcriber:
         audible_text = clean_thinking(text)
         HISTORY.append({"role": "assistant", "content": audible_text})
         tts = get_tts_engine()
-        samples, sample_rate = tts.create(audible_text, voice=VOICE, language=LANGUAGE)
+        samples, sample_rate = tts.create(audible_text, voice=VOICE, lang=LANGUAGE)
         sd.play(samples, sample_rate)
         sd.wait()
 
