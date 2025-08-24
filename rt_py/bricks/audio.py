@@ -1,4 +1,5 @@
 import numpy as np
+import sounddevice as sd
 
 SR = 16000
 
@@ -36,3 +37,15 @@ def prepare_for_write(x: np.ndarray, sr: int = SR) -> np.ndarray:
         x *= 0.99 / peak
 
     return x
+
+
+def list_audio_devices():
+    """List available audio devices to help with troubleshooting."""
+    print("Available audio devices:")
+    devices = sd.query_devices()
+    for i, device in enumerate(devices):
+        print(
+            f"  {i}: {device['name']} (inputs: {device['max_inputs']}, outputs: {device['max_outputs']})"
+        )
+    print(f"Default input device: {sd.default.device[0]}")
+    print()
