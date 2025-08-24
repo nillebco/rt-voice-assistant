@@ -15,7 +15,7 @@ import logging
 import numpy as np
 import soundfile as sf
 
-from ..bricks.stt_whisper_cpp import transcribe
+from ..bricks.stt.whispercpp import transcribe
 from ..bricks.listen import ListenOptions, listen
 from ..bricks.vad_silero import process_prob
 from ..bricks.frame_processor import Callbacks, FrameProcessor, FrameProcessorOptions
