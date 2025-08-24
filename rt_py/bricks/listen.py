@@ -20,8 +20,15 @@ class ListenOptions:
     process_frame: Callable[[np.ndarray], None] = None
 
 
+DEFAULT_SAMPLING_RATE = 16000
+DEFAULT_FRAMES_PER_CALLBACK = 1024
+DEFAULT_MAX_SECONDS_CACHE = 10
+MAX_SIZE = int(
+    DEFAULT_MAX_SECONDS_CACHE * DEFAULT_SAMPLING_RATE / DEFAULT_FRAMES_PER_CALLBACK
+)
+
 # Thread-safe queue to shuttle audio from callback to main thread
-q = queue.Queue(maxsize=100)
+q = queue.Queue(maxsize=MAX_SIZE)
 
 # Graceful shutdown flag
 running = True
