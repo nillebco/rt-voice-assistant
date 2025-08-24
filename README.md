@@ -81,7 +81,7 @@ The `api` file contains a sample FastAPI API exposing a few endpoints (inlcuding
 
 ### web application
 
-The rt-voice-assistant folder contains a web application (in React) showing how the VAD works in the browser. It will call the API to transform the voice recording into another voice recording.
+The `sample-web-client` folder contains a web application (in React) showing how the VAD works in the browser. It will call the API to transform the voice recording into another voice recording.
 
 ## Requirements
 

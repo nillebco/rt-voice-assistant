@@ -1,7 +1,7 @@
 [project]
 name = "rt-voice-assistant"
 version = "0.1.0"
-description = "Add your description here"
+description = "Code backing the \"Build Your own Real Time Voice Assistant\" PyConFR25 Workshop"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
