@@ -6,10 +6,10 @@ This project contains the code backing the "Build Your own Real Time Voice Assis
 
 In order to execute this code you need a few components
 
-uv: used to manage the dependencies
-ffmpeg (used mainly for transcoding audio formats)
-whisper.cpp (used for the STT - because it offers good support for both Mac and LInux and native GPU acceleration)
-ollama or a similar tool to execute AI models and expose them locally with a OpenAI API
+- uv: used to manage the dependencies
+- ffmpeg (used mainly for transcoding audio formats)
+- whisper.cpp (used for the STT - because it offers good support for both Mac and LInux and native GPU acceleration)
+- ollama or a similar tool to execute AI models and expose them locally with a OpenAI API
     also: OpenRouter or the OpenAI API
 
 A GPU will improve the performances greatly.
@@ -89,3 +89,16 @@ choco install ffmpeg
 
 ### on Windows using Scoop (https://scoop.sh/)
 scoop install ffmpeg
+
+## Configuration
+
+Your .env file will be used to store the configuration
+
+### Use a local ollama instance
+
+No need to set a secret key - just add these lines to your .env file
+
+```sh
+OPENAI_BASE_URL=http://localhost:11434/v1
+MODEL=qwen3:30b
+```
