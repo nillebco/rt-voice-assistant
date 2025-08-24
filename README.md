@@ -76,9 +76,32 @@ The rt-voice-assistant folder contains a web application (in React) showing how 
 
 ## Requirements
 
-### on Ubuntu or Debian
+### on Ubuntu or Debian -- using Docker
 
-sudo apt update && sudo apt install ffmpeg
+(The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
+
+mkdir models && cd models
+curl -L -o mixtral-8x7b-instruct.Q4_K_M.gguf \
+  https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
+curl -L -o qwen2-1_5b-instruct.Q4_K_M.gguf \
+  https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1_5b-instruct-q4_k_m.gguf
+cd ..
+docker run -v ./models:/models -p 12346:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/mixtral-8x7b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
+docker run -v ./models:/models -p 12346:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/qwen2-1_5b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
+curl http://localhost:12346/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-local" \
+  -d '{
+    "model": "qwen2-1_5b-instruct.Q4_K_M.gguf",
+    "messages": [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Write a haiku about Debian Linux."}
+    ],
+    "max_tokens": 100,
+    "temperature": 0.7
+  }'
+
+docker pull ghcr.io/ggml-org/whisper.cpp:main
 
 ### on MacOS using Homebrew (https://brew.sh/)
 
