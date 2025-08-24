@@ -69,26 +69,42 @@ The `api` file contains a sample FastAPI API exposing a few endpoints (inlcuding
 
 ### web application
 
-The rt-voice-assistant folder contains a web application (in React) showing how the VAD works in the browser. It will call the 
+The rt-voice-assistant folder contains a web application (in React) showing how the VAD works in the browser. It will call the API to transform the voice recording into another voice recording.
 
 ## Requirements
 
-FIXME
-
 ### on Ubuntu or Debian
+
 sudo apt update && sudo apt install ffmpeg
 
-### on Arch Linux
-sudo pacman -S ffmpeg
-
 ### on MacOS using Homebrew (https://brew.sh/)
+
+```sh
 brew install ffmpeg ollama
+ollama serve
 
-### on Windows using Chocolatey (https://chocolatey.org/)
-choco install ffmpeg
+# STT - whisper.cpp
+cd $HOME
+git clone https://github.com/ggml-org/whisper.cpp
+pushd whisper.cpp
+cmake -B build -DWHISPER_COREML=1
+cmake --build build -j --config Release
+uv init .
+uv add ane_transformers openai-whisper coremltools torch
+uv run ./models/generate-coreml-model.sh base.en
+uv run ./models/generate-coreml-model.sh small.en
+uv run ./models/generate-coreml-model.sh medium.en
+./models/download-ggml-model.sh base.en
+./models/download-ggml-model.sh small.en
+./models/download-ggml-model.sh medium.en
+./build/bin/whisper-cli -m models/ggml-base.en.bin -f samples/jfk.wav
+./build/bin/whisper-cli -m models/ggml-small.en.bin -f samples/jfk.wav
+./build/bin/whisper-cli -m models/ggml-medium.en.bin -f samples/jfk.wav
 
-### on Windows using Scoop (https://scoop.sh/)
-scoop install ffmpeg
+# TTS - kokoroTTS
+curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" -o kokoro-v1.0.onnx
+curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o voices-v1.0.bin
+```
 
 ## Configuration
 
@@ -102,3 +118,4 @@ No need to set a secret key - just add these lines to your .env file
 OPENAI_BASE_URL=http://localhost:11434/v1
 MODEL=qwen3:30b
 ```
+
