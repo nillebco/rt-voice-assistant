@@ -22,21 +22,29 @@ LLMs are good at what software isn't and viceversa. Think of them as a set of st
 
 ---
 ## Prerequisites
-- uv, npm, ollama, terraform, ffmpeg
+- uv, ffmpeg
+- [optional] terraform, npm, ollama
 - models:
 	- tts: kokoro + voices
 	- stt: whisper
-	- llm: gemma3
+	- llm: qwen3
 
 ---
+## CLI or Web?
+It's a real question, raise your hand for....
 
-## Client side
+---
+## CLI
+All in one - in the same file we have all components described above
+
+---
+## Web - Client side
 - React
 - VAD: voice activity detection (useful to avoid transferring hundreds of megabytes over the network)
-- API Client (sends the audio with the question, receives the audio with the question)
+- API Client (sends the audio with the question, receives the audio with the response)
 
 ---
-## Server side
+## Web - Server side
 The API will be composed of three parts
 
 - STT: Speech to text (transforms the voice into text)
@@ -44,97 +52,10 @@ The API will be composed of three parts
 - TTS: Text to speech (transforms the text into voice)
 
 ---
-### Infrastructure
+## Infrastructure
 We want to host this on Linux - a Hetzner server (CAX41)
 So we are going to use `terraform` to provision this
 Otherwise, we can try this on your PC 🤞
-
----
-## Client
-- React + typescript
-- additional package `@ricky0123/vad-react`.
-
-The idea is that our assistant is a web page with a single button "Start".
-When this button is pressed, we begin listening for any voice.
-When a voice is heard, we record a wav file. And when the voice stops, we send that to a server, for processing.
-
----
-## Client - step by step - shell
-```sh
-npm create vite@latest rt-voice-assistant -- --template react-ts
-cd rt-voice-assistant
-npm install
-npm i @ricky0123/vad-react --legacy-peer-deps
-npm run dev
-```
-
----
-
-## Client - App.tsx
-```tsx
-// something
-```
-
----
-## Client - services/api.ts
-```ts
-// something
-```
-
----
-## Server - shell
-```sh
-uv init
-# stt
-uv add 
-# tts
-uv add kokoro-onnx soundfile onnx-runtime
-# llm
-uv add httpx
-# api
-uv add fastapi pydantic
-```
----
-
-## Server - stt.py
-
-```python
-# this
-```
-
----
-## Server - tts.py
-```python
-# this
-```
-
----
-## Server - llm.py
-```python
-# this
-```
----
-## Server - api.py
-```python
-# this
-```
-
----
-## Infrastructure - terraform/main.tf
-
-```terraform
-variable "project_id" {
-	type = string
-}
-```
-
----
-## Infrastructure - Dockerfile
-
-```Dockerfile
-FROM ubuntu:24-04
-# this
-```
 
 ---
 ## References
