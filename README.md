@@ -77,7 +77,7 @@ The `cli` folder contains test CLI (command line interface) tools to verify what
 
 Every one of these samples can be run with a command like `uv run rt_py.cli.SAMPLE` (exception made for the last for which you type just `uv run rt_py.cli`).
 
-The `api` file contains a sample FastAPI API exposing a few endpoints (inlcuding a websocket).
+The `api` file contains a sample FastAPI API exposing a few endpoints (inlcuding a websocket). Launch it with `uv run -m rt_py.api --port 12347`.
 
 ### web application
 
