@@ -13,6 +13,7 @@
 
 from datetime import datetime
 import logging
+import os
 
 import numpy as np
 import soundfile as sf
@@ -34,6 +35,8 @@ logger.setLevel(logging.DEBUG)
 
 on_startup_tts()
 
+MODEL = os.getenv("MODEL", "openai/gpt-4o")
+URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
 
 class Transcriber:
     def __init__(self, filename_fmt: str):
@@ -87,9 +90,9 @@ class Transcriber:
         )
         print(f"Transcription: {transcription}")
 
-        client = get_client()
+        client = get_client(url=URL)
         response = client.chat.completions.create(
-            model="openai/gpt-4o",
+            model=MODEL,
             messages=[{"role": "user", "content": transcription}],
         )
         text = response.choices[0].message.content
