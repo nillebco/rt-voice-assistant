@@ -9,8 +9,6 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
-from .sample_callbacks import RMSMeter, multiple_callbacks, sample_process_frame
-
 
 @dataclass
 class ListenOptions:
@@ -43,7 +41,20 @@ def audio_callback(indata, frames, time, status):
         # Over/underruns, etc.
         print(f"[Audio status] {status!s}", file=sys.stderr)
     # Copy needed because indata is reused by the host
-    q.put(indata.copy(), block=False)
+    try:
+        q.put_nowait(indata.copy())
+    except queue.Full:
+        print("WARN: Queue is full, dropping audio data.", file=sys.stderr)
+        # Drop the oldest and enqueue the newest (bounded "ring buffer")
+        try:
+            _ = q.get_nowait()
+        except queue.Empty:
+            pass
+        # Last attempt; if it fails again, we just drop this frame.
+        try:
+            q.put_nowait(indata.copy())
+        except queue.Full:
+            pass  # drop
 
 
 def listen(options: ListenOptions):
@@ -83,4 +94,3 @@ def listen(options: ListenOptions):
                 options.process_frame(chunk)
 
     print("\nStopped. File closed.")
-
