@@ -22,7 +22,8 @@ LLMs are good at what software isn't and viceversa. Think of them as a set of st
 
 ---
 ## Prerequisites
-- uv, ffmpeg
+
+- uv, ffmpeg, docker
 - [optional] terraform, npm, ollama
 - models:
 	- tts: kokoro + voices

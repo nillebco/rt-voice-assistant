@@ -34,9 +34,7 @@ uv run rt_py.cli
 
 ## Slides
 
-The slides presented are in the doc/slides folder. you can run `npm i && npm run start` to get the Workshop experience (on http://localhost:12345). Otherwise just open the md file in that folder. The architexture diagram is in the .excalidraw file.
-
-FIXME: copy the latest slides.
+The slides presented are in the doc/slides folder. Also: You can view them on [RawGitHack](https://raw.githack.com/nillebco/rt-voice-assistant/main/doc/slides/index.html).
 
 ## Repository structure
 
@@ -80,6 +78,7 @@ The rt-voice-assistant folder contains a web application (in React) showing how 
 
 (The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
 
+```sh
 mkdir models && cd models
 curl -L -o mixtral-8x7b-instruct.Q4_K_M.gguf \
   https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
@@ -102,6 +101,7 @@ curl http://localhost:12346/v1/chat/completions \
   }'
 
 docker pull ghcr.io/ggml-org/whisper.cpp:main
+```
 
 ### on MacOS using Homebrew (https://brew.sh/)
 
