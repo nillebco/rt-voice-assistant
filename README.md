@@ -122,3 +122,7 @@ OPENAI_BASE_URL=http://localhost:11434/v1
 MODEL=qwen3:30b
 ```
 
+## Future evolutions
+
+- Detect the spoken language
+- Reduce the pauses in the input

@@ -1,6 +1,3 @@
----
-cssclasses: pycon
----
 ## Build <span class="highlight">*your own*</span> Real Time Voice Assistant
 
 ---

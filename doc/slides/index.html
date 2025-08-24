@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>My Presentation</title>
+  <link rel="stylesheet" href="node_modules/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="node_modules/reveal.js/dist/theme/black.css">
+  <link rel="stylesheet" href="slides-custom.css">
+</head>
+
+<body>
+  <div class="slides-container pycon reveal">
+    <div class="slides">
+      <section data-markdown="Presentation.md" data-separator="^---$" data-separator-vertical="^\*\*\*$"
+        data-separator-notes="^Note:"></section>
+    </div>
+  </div>
+  <script src="node_modules/reveal.js/dist/reveal.js"></script>
+  <script src="node_modules/reveal.js/plugin/markdown/markdown.js"></script>
+  <script>
+    // new Reveal('.slides-container')
+    Reveal.initialize({
+      hash: true,
+      plugins: [RevealMarkdown],
+      slideNumber: true,
+      controls: false,
+      progress: true,
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,105 @@
+/* Overall scale (use sparingly) */
+/*.reveal .slides {
+    font-size: 30px;
+    line-height: 1.35;
+}*/
+
+/* Tighter headings, consistent rhythm */
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+    letter-spacing: .2px;
+    margin: 0 0 .4em;
+}
+
+/* Lists: more readable */
+.reveal ul,
+.reveal ol {
+    margin: .4em 0 .8em 1.2em;
+}
+
+.reveal li {
+    margin: .15em 0;
+}
+
+/* Global reveal.js tokens (safe, future-proof way) */
+.reveal {
+    --r-background-color: #0f172a;
+    /* slate-900 */
+    --r-main-color: #e5e7eb;
+    /* text */
+    --r-heading-color: #ffffff;
+    --r-link-color: #93c5fd;
+    --r-link-color-hover: #bfdbfe;
+
+    --r-main-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --r-heading-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --r-code-font: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+    --r-heading1-size: 2.2em;
+    --r-heading2-size: 1.6em;
+    --r-heading3-size: 1.25em;
+
+    --r-block-margin: 16px;
+}
+
+.reveal .highlight {
+    color: #e879f9;
+    /* pink/purple highlight */
+    font-weight: 600;
+}
+
+.pycon.reveal .slide-number a {
+    font-size: 12px;
+    color: #000;
+    background: #fff;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    padding: 2px 6px;
+    display: inline-block;
+}
+
+.pycon.reveal .slide-number::before {
+    content: "PyConFR 2025 ";
+    font-weight: 600;
+    font-size: 12px;
+    color: #fff;
+    background: #000;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-right: 4px;
+    display: inline-block;
+}
+
+.russo-one-regular {
+    font-family: "Russo One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.pycon.reveal::before {
+    content: url("https://nilleb.co/assets/logo-xs.png");
+    position: fixed;
+    left: 12px;
+    bottom: 28px;
+    width: 24px;
+    height: 24px;
+}
+
+.pycon.reveal::after {
+    content: "nillebCo";
+    font-family: "Russo One", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 24px;
+    position: fixed;
+    left: 58px;
+    bottom: 20px;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
+}
+
+.pycon.reveal .excalidraw-svg img {
+    max-width: 800px !important;
+}
