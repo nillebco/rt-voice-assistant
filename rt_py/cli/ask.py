@@ -16,7 +16,7 @@ load_dotenv()
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("MODEL", "openai/gpt-4o")
-URL = os.getenv("OPENAI_URL", "https://openrouter.ai/api/v1")
+URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
 
 if __name__ == "__main__":
     running = True

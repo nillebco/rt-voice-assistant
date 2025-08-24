@@ -15,8 +15,8 @@ from datetime import datetime
 import numpy as np
 
 from ..bricks.listen import ListenOptions, listen
-from ..bricks.vad_silero import process_prob
-from ..bricks.vad_webrtc import process_vad_webrtc
+from ..bricks.vad.silero import process_prob
+from ..bricks.vad.webrtc import process_vad_webrtc
 
 
 def vad_silero_callback(chunk: np.ndarray):
