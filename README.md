@@ -15,6 +15,8 @@ In order to execute this code you need a few components
 A GPU will improve the performances greatly.
 This code has been tested on a Mac (M4).
 
+Every time the voice assistant detects a sentence end, it will not process any further audio till when the AI answer will be ready.
+
 ## For the impatients
 
 Create a .env file with a structure like this
