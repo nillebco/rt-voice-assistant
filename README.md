@@ -100,7 +100,12 @@ curl http://localhost:12346/v1/chat/completions \
     "temperature": 0.7
   }'
 
+# STT - whisper.cpp
 docker pull ghcr.io/ggml-org/whisper.cpp:main
+
+# TTS - kokoroTTS
+curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" -o models/kokoro-v1.0.onnx
+curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o models/voices-v1.0.bin
 ```
 
 ### on MacOS using Homebrew (https://brew.sh/)
@@ -128,8 +133,8 @@ uv run ./models/generate-coreml-model.sh medium.en
 ./build/bin/whisper-cli -m models/ggml-medium.en.bin -f samples/jfk.wav
 
 # TTS - kokoroTTS
-curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" -o kokoro-v1.0.onnx
-curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o voices-v1.0.bin
+curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" -o models/kokoro-v1.0.onnx
+curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o models/voices-v1.0.bin
 ```
 
 ## Configuration

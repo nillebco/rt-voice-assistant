@@ -4,6 +4,7 @@ import onnxruntime as ort
 import urllib.request
 from kokoro_onnx import Kokoro
 
+FOLDER = "models"
 def download_model_files():
     """Download model files if they don't exist."""
     model_urls = {
@@ -12,10 +13,11 @@ def download_model_files():
     }
 
     for filename, url in model_urls.items():
-        if not os.path.exists(filename):
+        fpath = os.path.join(FOLDER, filename)
+        if not os.path.exists(fpath):
             print(f"Downloading {filename}...")
             try:
-                urllib.request.urlretrieve(url, filename)
+                urllib.request.urlretrieve(url, fpath)
                 print(f"Successfully downloaded {filename}")
             except Exception as e:
                 print(f"Error downloading {filename}: {e}")
@@ -33,12 +35,12 @@ def get_tts_engine():
     if tts is None:
         if platform.system() == "Darwin":
             providers = ["CoreMLExecutionProvider", "CPUExecutionProvider"]
-            session = ort.InferenceSession("kokoro-v1.0.onnx", providers=providers)
-            tts = Kokoro.from_session(session, voices_path="voices-v1.0.bin")
+            session = ort.InferenceSession(os.path.join(FOLDER, "kokoro-v1.0.onnx"), providers=providers)
+            tts = Kokoro.from_session(session, voices_path=os.path.join(FOLDER, "voices-v1.0.bin"))
         else:
             tts = Kokoro(
-                model_path="kokoro-v1.0.onnx",
-                voices_path="voices-v1.0.bin",
+                model_path=os.path.join(FOLDER, "kokoro-v1.0.onnx"),
+                voices_path=os.path.join(FOLDER, "voices-v1.0.bin"),
             )
     return tts
 
