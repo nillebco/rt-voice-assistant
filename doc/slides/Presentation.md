@@ -62,5 +62,59 @@ So we are going to use `terraform` to provision this
 Otherwise, we can try this on your PC 🤞
 
 ---
+
+## Flow
+
+We record -> The user speaks -> We detect voice -> We extract the text -> We pass it to a LLM -> We synthetize the LLM response to voice -> We play that sound.
+
+---
+
+## Disclaimer about the technologies
+
+> Why didn't you pick instead `ModelXYZ` as `<technology>` ?
+
+I have picked "good enough", #opensource if possible, technologies
+available in August 2025. Other technologies certainly exist and you might prefer them. Just fork my repository and try them! :)
+
+---
+
+## Deep dive: Voice Activity Detection (VAD)
+
+- Silero
+- Webrtc (older)
+
+---
+
+## Deep dive: Speech to text (STT)
+
+Recognize the voice in a sound stream
+
+- Whisper (WhisperX, WhisperCPP) ✅
+- Voxtral
+
+---
+
+### Deep dive: Large Language Models (LLM)
+
+Several models are available and every month we have a new one
+The performances are known thanks to benchmarks
+You can run a small model on practically any device (with reduced performaces)
+For this workshop we are going to use essentially
+Qwen ✅ and/or Gemma, Mixtral
+
+---
+
+## Deep dive: Text to speech (TTS)
+
+Synthetize a text into sound - maybe including emotions
+
+- KokoroTTS ✅
+- KittenTTS
+
+---
+
 ## References
-[this code](https://github.com/nillebco/rt-voice-assistant.git)
+
+- [this code](https://github.com/nillebco/rt-voice-assistant.git)
+
+Please ⭐️ star it if you liked this presentation!

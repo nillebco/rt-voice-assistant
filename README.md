@@ -2,6 +2,16 @@
 
 This repository contains the code backing the "Build Your own Real Time Voice Assistant" PyConFR25 Workshop.
 
+During this workshop we will implement a python software to interact with a LLM using the voice, in real time. We will try a local first solution, if the hardware of the participants allows. With a possible fallback on external APIs hosted by OpenRouter.
+
+Access the [Slides](https://raw.githack.com/nillebco/rt-voice-assistant/main/doc/slides/index.html).
+
+Clone the repository easily:
+
+```sh
+git clone https://github.com/nillebco/rt-voice-assistant
+```
+
 ## Caveat
 
 In order to execute this code you need a few components
@@ -9,8 +19,9 @@ In order to execute this code you need a few components
 - uv: used to manage the dependencies
 - ffmpeg (used mainly for transcoding audio formats)
 - whisper.cpp (used for the STT - because it offers good support for both Mac and LInux and native GPU acceleration)
-- ollama or a similar tool to execute AI models and expose them locally with a OpenAI API
-    also: OpenRouter or the OpenAI API
+- ollama or llama.cpp - to run AI models and expose them locally with a OpenAI API
+    otherwise: OpenRouter or the OpenAI API
+- optional: npm, terraform
 
 A GPU will improve the performances greatly.
 This code has been tested on a Mac (M4).
@@ -79,12 +90,10 @@ The rt-voice-assistant folder contains a web application (in React) showing how 
 (The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
 
 ```sh
-mkdir models && cd models
-curl -L -o mixtral-8x7b-instruct.Q4_K_M.gguf \
+curl -L -o models/mixtral-8x7b-instruct.Q4_K_M.gguf \
   https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
-curl -L -o qwen2-1_5b-instruct.Q4_K_M.gguf \
+curl -L -o models/qwen2-1_5b-instruct.Q4_K_M.gguf \
   https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1_5b-instruct-q4_k_m.gguf
-cd ..
 docker run -v ./models:/models -p 12346:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/mixtral-8x7b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
 docker run -v ./models:/models -p 12346:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/qwen2-1_5b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
 curl http://localhost:12346/v1/chat/completions \
