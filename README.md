@@ -1,6 +1,6 @@
 # Reat Time Voice Assistant
 
-This project contains the code backing the "Build Your own Real Time Voice Assistant" PyConFR25 Workshop.
+This repository contains the code backing the "Build Your own Real Time Voice Assistant" PyConFR25 Workshop.
 
 ## Caveat
 
@@ -43,25 +43,25 @@ The repository contains a rt_py folder containing the code that we will try to i
 
 The bricks folder contains the elementary bricks that we will be working on during the workshop
 
-- stt folder: several alternatives to implement the Speech-to-Text.
-- vad: Voice Activity Detection (with silero - better - or webrtc)
-- audio: utility functions to save the recordings to a file avoiding the noise.
-- listen: start the recording thread, launch the frame processor
-- frame_processor: simple logic to accumulate voice frames, detect speech start and speech end
-- tts: text-to-speech implemented with Kokoro.
-- llm: query a llm (locally or remotely) using the openai API (a de facto standard nowadays)
+- `stt` folder: several alternatives to implement the Speech-to-Text.
+- `vad`: Voice Activity Detection (with silero - better - or webrtc)
+- `audio`: utility functions to save the recordings to a file avoiding the noise.
+- `listen`: start the recording thread, launch the frame processor
+- `frame_processor`: simple logic to accumulate voice frames, detect speech start and speech end
+- `tts`: text-to-speech implemented with Kokoro.
+- `llm`: query a llm (locally or remotely) using the openai API (a de facto standard nowadays)
 
 ### cli
 
 The `cli` folder contains test CLI (command line interface) tools to verify what we are doing.
 
-- listen: listens to your voice and dumps a recording. Displays the current DB.
-- vad: detect voice frame by frame (no recording)
-- record_voice: voice activity detection sample: it creates a recording for every voice session.
-- transcribe: convert the detected speech to text
-- say: convert what you type to speech
-- ask: textual assistant. Type your questions you will get the configured AI to answer them.
-- __main__: the rt voice assistant
+- `listen`: listens to your voice and dumps a recording. Displays the current DB.
+- `vad`: detect voice frame by frame (no recording)
+- `record_voice`: voice activity detection sample: it creates a recording for every voice session.
+- `transcribe`: convert the detected speech to text
+- `say`: convert what you type to speech
+- `ask`: textual assistant. Type your questions you will get the configured AI to answer them.
+- `__main__`: the rt voice assistant
 
 Every one of these samples can be run with a command like `uv run rt_py.cli.SAMPLE` (exception made for the last for which you type just `uv run rt_py.cli`).
 
