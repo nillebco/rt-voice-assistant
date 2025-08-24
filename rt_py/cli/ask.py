@@ -14,12 +14,13 @@ from rt_py.bricks.llm import trim_to_budget, get_client
 
 load_dotenv()
 
-API_KEY = os.getenv("OPENROUTER_API_KEY")
-MODEL = "openai/gpt-4o"
+API_KEY = os.getenv("OPENAI_API_KEY")
+MODEL = os.getenv("MODEL", "openai/gpt-4o")
+URL = os.getenv("OPENAI_URL", "https://openrouter.ai/api/v1")
 
 if __name__ == "__main__":
     running = True
-    client = get_client(api_key=API_KEY)
+    client = get_client(api_key=API_KEY, url=URL)
 
     def handle_sigint(sig, frame):
         global running

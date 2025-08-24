@@ -1,5 +1,7 @@
-from openai import OpenAI
+import re
+
 import tiktoken
+from openai import OpenAI
 
 
 def get_client(url=None, api_key=None):
@@ -27,3 +29,7 @@ def trim_to_budget(history, system_prompt, budget=6000):
         history.pop(0)
         msgs = [{"role": "system", "content": system_prompt}] + history
     return msgs
+
+
+def clean_thinking(text):
+    return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
