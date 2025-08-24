@@ -9,5 +9,9 @@ wheels/
 # Virtual environments
 .venv
 capture_*.wav
+voice_*.wav
+out-*.json
+out-*.txt
 *.onnx
 *.bin
+.env
