@@ -12,7 +12,6 @@ from datetime import datetime
 from ..bricks.listen import ListenOptions, listen
 from ..bricks.sample_callbacks import RMSMeter, multiple_callbacks, sample_process_frame
 
-
 if __name__ == "__main__":
     options = ListenOptions(
         samplerate=16000,

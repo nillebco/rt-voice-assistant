@@ -7,11 +7,16 @@
 # ]
 # ///
 
+import os
 import signal
 import sys
 
 import sounddevice as sd
-from rt_py.bricks.tts import get_tts_engine
+
+from ..bricks.tts import get_tts_engine
+
+VOICE=os.getenv("VOICE", "af_heart")
+LANGUAGE=os.getenv("LANGUAGE", "en-us")
 
 tts = get_tts_engine()
 running = True
@@ -26,7 +31,7 @@ signal.signal(signal.SIGINT, handle_sigint)
 
 if len(sys.argv) > 1:
     text = " ".join(sys.argv[1:])
-    samples, sample_rate = tts.create(text, voice="af_heart")
+    samples, sample_rate = tts.create(text, voice=VOICE, language=LANGUAGE)
     sd.play(samples, sample_rate)
     sd.wait()
     exit(0)
@@ -37,6 +42,6 @@ while running:
     if not text:
         break
 
-    samples, sample_rate = tts.create(text, voice="af_heart")
+    samples, sample_rate = tts.create(text, voice=VOICE, language=LANGUAGE)
     sd.play(samples, sample_rate)
     sd.wait()

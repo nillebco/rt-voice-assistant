@@ -11,22 +11,23 @@
 # ]
 # ///
 
-from datetime import datetime
 import logging
 import os
+from datetime import datetime
 
 import numpy as np
-import soundfile as sf
 import sounddevice as sd
-
-from ..bricks.stt.whispercpp import transcribe
-from ..bricks.listen import ListenOptions, listen
-from ..bricks.vad.silero import process_prob
-from ..bricks.llm import get_client, clean_thinking, trim_to_budget
-from ..bricks.frame_processor import Callbacks, FrameProcessor, FrameProcessorOptions
-from ..bricks.audio import prepare_for_write
-from ..bricks.tts import get_tts_engine, on_startup as on_startup_tts
+import soundfile as sf
 from dotenv import load_dotenv
+
+from ..bricks.audio import prepare_for_write
+from ..bricks.frame_processor import Callbacks, FrameProcessor, FrameProcessorOptions
+from ..bricks.listen import ListenOptions, listen
+from ..bricks.llm import clean_thinking, get_client, trim_to_budget
+from ..bricks.stt.whispercpp import transcribe
+from ..bricks.tts import get_tts_engine
+from ..bricks.tts import on_startup as on_startup_tts
+from ..bricks.vad.silero import process_prob
 
 load_dotenv()
 
@@ -37,9 +38,15 @@ on_startup_tts()
 
 MODEL = os.getenv("MODEL", "openai/gpt-4o")
 URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
-SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", f"You are a concise, helpful assistant. Today it's {datetime.now().strftime('%Y-%m-%d')}.")
+SYSTEM_PROMPT = os.getenv(
+    "SYSTEM_PROMPT",
+    f"You are a concise, helpful assistant. Today it's {datetime.now().strftime('%Y-%m-%d')}.",
+)
+VOICE = os.getenv("VOICE", "af_heart")
+LANGUAGE = os.getenv("LANGUAGE", "en-us")
 
 HISTORY = []
+
 
 class Transcriber:
     def __init__(self, filename_fmt: str):
@@ -76,7 +83,7 @@ class Transcriber:
     def on_speech_end(self, frame: np.ndarray):
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = self.filename_fmt.format(timestamp)
-        
+
         with sf.SoundFile(
             filename,
             mode="w",
@@ -107,10 +114,9 @@ class Transcriber:
         audible_text = clean_thinking(text)
         HISTORY.append({"role": "assistant", "content": audible_text})
         tts = get_tts_engine()
-        samples, sample_rate = tts.create(audible_text, voice="af_heart")
+        samples, sample_rate = tts.create(audible_text, voice=VOICE, language=LANGUAGE)
         sd.play(samples, sample_rate)
         sd.wait()
-
 
     def __call__(self, frame: np.ndarray):
         self.frame_processor.process(frame)

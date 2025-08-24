@@ -7,10 +7,12 @@
 # ///
 
 import os
-import sys
 import signal
+import sys
+
 from dotenv import load_dotenv
-from rt_py.bricks.llm import trim_to_budget, get_client
+
+from rt_py.bricks.llm import get_client, trim_to_budget
 
 load_dotenv()
 
@@ -25,7 +27,6 @@ if __name__ == "__main__":
     def handle_sigint(sig, frame):
         global running
         running = False
-
 
     signal.signal(signal.SIGINT, handle_sigint)
 

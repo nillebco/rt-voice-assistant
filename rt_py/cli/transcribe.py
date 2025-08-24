@@ -9,17 +9,17 @@
 # ]
 # ///
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 import numpy as np
 import soundfile as sf
 
-from ..bricks.stt.whispercpp import transcribe
-from ..bricks.listen import ListenOptions, listen
-from ..bricks.vad.silero import process_prob
-from ..bricks.frame_processor import Callbacks, FrameProcessor, FrameProcessorOptions
 from ..bricks.audio import prepare_for_write
+from ..bricks.frame_processor import Callbacks, FrameProcessor, FrameProcessorOptions
+from ..bricks.listen import ListenOptions, listen
+from ..bricks.stt.whispercpp import transcribe
+from ..bricks.vad.silero import process_prob
 
 logger = logging.getLogger("rt_py.cli.transcribe")
 logger.setLevel(logging.DEBUG)
@@ -60,7 +60,7 @@ class Transcriber:
     def on_speech_end(self, frame: np.ndarray):
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = self.filename_fmt.format(timestamp)
-        
+
         with sf.SoundFile(
             filename,
             mode="w",
