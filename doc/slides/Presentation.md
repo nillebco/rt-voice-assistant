@@ -54,8 +54,11 @@ The API will be composed of three parts
 
 ---
 ## Infrastructure
+
 We want to host this on Linux - a Hetzner server (CAX41)
+
 So we are going to use `terraform` to provision this
+
 Otherwise, we can try this on your PC 🤞
 
 ---
