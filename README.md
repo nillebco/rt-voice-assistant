@@ -23,7 +23,8 @@ Create a .env file with a structure like this
 
 ```sh
 OPENAI_API_KEY=sk-or-v1-aOpenRoutersecretkeyhere
-WHISPER_CPP_DIR="/Users/nilleb/dev/nillebco/whisper-ane/whisper.cpp"
+# if you don't have this yet, check the section about whisper-cpp in the follow.
+WHISPER_CPP_DIR="/Users/nilleb/whisper.cpp"
 ```
 
 ```sh
