@@ -28,6 +28,7 @@ docker() {
 download_all() {
   git clone https://github.com/nillebco/rt-voice-assistant.git
   pushd rt-voice-assistant
+  git checkout tf
   uv sync
 
   if [ ! -d "models" ]; then
