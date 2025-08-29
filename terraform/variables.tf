@@ -12,15 +12,11 @@ variable "instances" {
 
 variable "server_type" {
   # https://www.hetzner.com/cloud/
-  default = "cx52"
+  default = "cpx51"
 }
 
 variable "os_type" {
   default = "ubuntu-24.04"
-}
-
-variable "disk_size" {
-  default = "20"
 }
 
 variable "ssh_key_path" {

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEFAULT_WHISPER_MODEL="base"
+DEFAULT_WHISPER_MODEL="base.en"
 DEFAULT_LLM_MODEL="mixtral-8x7b-instruct.Q4_K_M.gguf"
 DEFAULT_WHISPER_TAG="main"
 
@@ -35,16 +35,15 @@ download_all() {
     mkdir models
   fi
   # 25GiB
-  curl -L -o models/mixtral-8x7b-instruct.Q4_K_M.gguf \
-    https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
+  # curl -L -o models/mixtral-8x7b-instruct.Q4_K_M.gguf \
+  #   https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
   # 941MiB
   curl -L -o models/qwen2-1_5b-instruct.Q4_K_M.gguf \
     https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1_5b-instruct-q4_k_m.gguf
   docker pull ghcr.io/ggml-org/whisper.cpp:main
-
+  docker pull ghcr.io/ggml-org/llama.cpp:server
   curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" -o models/kokoro-v1.0.onnx
   curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o models/voices-v1.0.bin
-
   # whisper ggmls - https://huggingface.co/ggerganov/whisper.cpp/tree/main
   curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin -o models/ggml-tiny.en.bin
   curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin -o models/ggml-base.en.bin
@@ -62,22 +61,28 @@ transcribe() {
   if [ ! -d "audios" ]; then
     mkdir audios
   fi
+  if [ ! -d "outputs" ]; then
+    mkdir outputs
+  fi
   # if the audio file is not in the audios folder, move it
   if [[ "$audio_file" != audios/* ]]; then
     mv "$audio_file" audios/
     audio_file="audios/$(basename "$audio_file")"
   fi
   docker run -it --rm \
-    -v models:/models \
-    -v audios:/audios \
-    -v outputs:/outputs
-    whisper.cpp:main "whisper-cli -m /models/ggml-${model}.bin -f $audio_file -ojf -of /outputs/out-$(basename $audio_file)"
+    -v "$(pwd)/models":/models \
+    -v "$(pwd)/audios":/audios \
+    -v "$(pwd)/outputs":/outputs \
+    --memory=4g --memory-swap=8g \
+    --cpus=6 \
+    ghcr.io/ggml-org/whisper.cpp:main \
+    "whisper-cli -m /models/ggml-${model}.bin -f $audio_file -ojf -of /outputs/out-$(basename $audio_file)"
   popd
 }
 
 say() {
   pushd rt-voice-assistant
-  uv run -m rt_voice_assistant.say $@
+  uv run -m rt_voice_assistant.cli.say $@
   popd
 }
 
@@ -85,7 +90,8 @@ llm_up() {
   # defaults to mixtral-8x7b-instruct.Q4_K_M.gguf if not specified
   # qwen2-1_5b-instruct.Q4_K_M.gguf is another model that works well
   model=${1:-$DEFAULT_LLM_MODEL}
-  docker run --rm --name llm-${model} -v ./models:/models -p 11434:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/${model} --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
+  docker run --rm --name llm-${model} -v "$(pwd)/models":/models -p 11434:8000 ghcr.io/ggml-org/llama.cpp:server \
+  -m /models/${model} --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
 }
 
 llm_down() {

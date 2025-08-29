@@ -12,6 +12,12 @@ packages:
   - fail2ban
   - ufw
   - podman
+  - libportaudio2
+  - portaudio19-dev
+  - libportaudiocpp0
+  - libasound2
+  - libasound2-plugins
+  - alsa-utils
 runcmd:
   - printf "[sshd]\nenabled = true\nbanaction = iptables-multiport" > /etc/fail2ban/jail.local
   - systemctl enable ssh

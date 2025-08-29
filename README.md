@@ -178,13 +178,16 @@ MODEL=qwen2-1_5b-instruct.Q4_K_M.gguf
 
 create a file terraform/tailscale.vars following the sample
 create a file terraform/hetzner.vars following the sample
+add a line ssh_key_file=~/.ssh/id_rsa to your .env
 
 ./cli tf apply
 (please note the server ip in the output; wait a couple minutes for the user_data.yaml to complete)
 ./cli scpto -h $hostname terraform/configuration/devops devops
 ./cli ssh -h $hostname
+chmod 755 devops
 ./devops download
-cd rt-voice-assistant
+pushd rt-voice-assistant
 mkdir audios
 curl https://raw.githubusercontent.com/ggml-org/whisper.cpp/refs/heads/master/samples/jfk.wav -o audios/jfk.wav
+popd
 ./devops transcribe audios/jfk.wav
