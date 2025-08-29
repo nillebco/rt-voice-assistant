@@ -12,7 +12,7 @@ variable "instances" {
 
 variable "server_type" {
   # https://www.hetzner.com/cloud/
-  default = "cx22"
+  default = "cx52"
 }
 
 variable "os_type" {

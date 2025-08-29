@@ -35,4 +35,15 @@ runcmd:
   - su - devops -c "tailscale cert ${SERVICE_NAME}.${TAILSCALE_DOMAIN}"
   - su - devops -c "echo 'alias docker=podman' >> /home/devops/.bashrc"
   - su - devops -c "curl -LsSf https://astral.sh/uv/install.sh | sh"
+  - mkdir -p /etc/containers
+  - |
+    cat > /etc/containers/containers.conf << 'EOF'
+    [engine]
+    [engine.resource_limits]
+    memory = "28G"
+    cpu_shares = 1024
+    cpu_quota = 1500000
+    cpu_period = 100000
+    pids_limit = 4096
+    EOF
   - reboot
