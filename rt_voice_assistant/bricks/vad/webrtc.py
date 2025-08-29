@@ -3,6 +3,14 @@ import webrtcvad
 
 SAMPLERATE = 16000  # 44_100 or 48_000 are common, pywebrtcvad uses 8000, 16000, 32000 or 48000 Hz, silero uses 8000 or 16000
 
+try:
+    import webrtcvad
+    WEBRTC_AVAILABLE = True
+except ImportError:
+    WEBRTC_AVAILABLE = False
+    webrtcvad = None
+
+
 def _is_speech_webrtc(chunk_bytes: list[bytes], sampling_rate: int = SAMPLERATE):
     try:
         is_speech = vad_webrtc.is_speech(chunk_bytes, sampling_rate)
@@ -13,6 +21,8 @@ def _is_speech_webrtc(chunk_bytes: list[bytes], sampling_rate: int = SAMPLERATE)
 
 
 def process_vad_webrtc(chunk: np.ndarray, sampling_rate: int = SAMPLERATE):
+    if not WEBRTC_AVAILABLE:
+        raise ImportError("webrtcvad is not available on this platform. Use silero VAD instead.")
     """
     Process the audio chunk using WebRTC VAD.
     Ensures WebRTC VAD requirements:
