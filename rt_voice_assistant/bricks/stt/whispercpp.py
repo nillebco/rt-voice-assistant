@@ -1,6 +1,6 @@
-import os
-import logging
 import json
+import logging
+import os
 import subprocess
 import uuid
 
@@ -77,6 +77,23 @@ def execute_whisper(cmd: list[str]):
     return process_handle
 
 
+def whisper_cpp_args(model_path, input_wav_path, output_prefix, language=None):
+    cmd = [
+        "-m",
+        model_path,
+        "-f",
+        input_wav_path,
+        "-ojf",
+        "-of",
+        output_prefix,
+    ]
+
+    if language:
+        cmd.extend(["-l", language])
+
+    return cmd
+
+
 def transcribe(
     input_wav_path: str,
     model: str = None,
@@ -91,7 +108,13 @@ def transcribe(
     )
     DEFAULT_MODEL = "small"  # Default model to use when whisper-1 is specified
 
-    output_prefix = f"out-{uuid.uuid4()}"
+    if not os.path.isdir("outputs"):
+        os.mkdir("outputs")
+
+    if not os.path.isdir("audios"):
+        os.mkdir("audios")
+
+    output_prefix = f"outputs/out-{uuid.uuid4()}"
 
     actual_model = DEFAULT_MODEL if model == "whisper-1" or not model else model
     model_path = WHISPER_MODEL_FMT.format(model=actual_model, language=language)
@@ -101,19 +124,35 @@ def transcribe(
             "Please check the model name and language."
         )
 
-    cmd = [
-        WHISPER_BINARY,
-        "-m",
-        model_path,
-        "-f",
-        input_wav_path,
-        "-ojf",
-        "-of",
-        output_prefix,
-    ]
-
-    if language:
-        cmd.extend(["-l", language])
+    cmd = []
+    args = whisper_cpp_args(model_path, input_wav_path, output_prefix)
+    if os.path.exists(WHISPER_BINARY):
+        cmd.append(WHISPER_BINARY)
+        cmd.extend(args)
+    else:
+        # copy the audio file to audios folder -- if they are not already there        
+        audio_filename = os.path.basename(input_wav_path)
+        audio_dest_path = os.path.join("audios", audio_filename)
+        
+        if audio_dest_path != input_wav_path:
+            import shutil
+            shutil.copy2(input_wav_path, audio_dest_path)
+            logger.info(f"Copied audio file to {audio_dest_path}")
+        
+        cmd += [
+            "docker",
+            "run",
+            "-it",
+            "--rm",
+            "-v",
+            "models:/models",
+            "-v",
+            "audios:/audios",
+            "-v",
+            "outputs:/outputs",
+            "whisper.cpp:main",
+            f'"{' '.join(args)}"',
+        ]
 
     try:
         process_handle = execute_whisper(cmd)
