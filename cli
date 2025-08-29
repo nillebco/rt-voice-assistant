@@ -1,0 +1,147 @@
+#!/bin/bash
+# visit https://dash.cloudflare.com/profile/api-tokens to add the ipv6 address to the api token
+
+load_dotenv() {
+    if [ -f .env ]; then
+        source .env
+    fi
+}
+
+# Function to parse hostname option
+parse_hostname() {
+    local hostname=""
+    local args=()
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h)
+                if [[ -n "$2" && "$2" != -* ]]; then
+                    hostname="$2"
+                    shift 2
+                else
+                    echo "Error: -h option requires a hostname argument"
+                    exit 1
+                fi
+                ;;
+            *)
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+    
+    # If no hostname specified, use terraform output
+    if [[ -z "$hostname" ]]; then
+        hostname=$(cd terraform && terraform output -raw service_ip)
+    fi
+    
+    # Return the hostname and remaining args
+    echo "$hostname"
+    printf '%s\n' "${args[@]}"
+}
+
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 <subcommand> [options]"
+    echo ""
+    echo "Available subcommands:"
+    echo "  tf <terraform-subcommand>  - Run terraform with specified subcommand"
+    echo "  ssh [-h hostname]          - SSH to the server (default: terraform output)"
+    echo "  tunnel [-h hostname]       - SSH tunnel to the server (default: terraform output)"
+    echo "  scpto [-h hostname] <file> <dest> - Copy file to server (default: terraform output)"
+    echo "  help                       - Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 tf plan"
+    echo "  $0 tf apply"
+    echo "  $0 tf destroy"
+    echo "  $0 ssh"
+    echo "  $0 ssh -h 192.168.1.100"
+    echo "  $0 tunnel -h example.com"
+    echo "  $0 scpto file.txt /tmp/"
+    echo "  $0 scpto -h example.com file.txt /tmp/"
+    echo "  $0 apply"
+}
+
+# Check if subcommand is provided
+if [ $# -eq 0 ]; then
+    echo "Error: No subcommand provided"
+    show_usage
+    exit 1
+fi
+
+# Get the subcommand
+subcommand="$1"
+shift
+
+# Handle different subcommands
+case "$subcommand" in
+    "tf")
+        if [ $# -eq 0 ]; then
+            echo "Error: No terraform subcommand provided"
+            echo "Usage: $0 tf <terraform-subcommand>"
+            exit 1
+        fi
+        pushd terraform
+        if [ "$@" == "validate" ]; then
+            terraform "$@"
+        else
+            terraform "$@" -var-file=hetzner.tfvars -var-file=tailscale.tfvars
+        fi
+        popd
+        ;;
+    ssh)
+        load_dotenv
+        # Parse hostname and remaining arguments
+        parsed_output=$(parse_hostname "$@")
+        hostname=$(echo "$parsed_output" | head -n1)
+        remaining_args=$(echo "$parsed_output" | tail -n +2)
+        
+        # Convert remaining args back to array
+        eval "args=($remaining_args)"
+        
+        ssh -i $ssh_key_file devops@"$hostname" "${args[@]}"
+        ;;
+    tunnel)
+        load_dotenv
+        # Parse hostname and remaining arguments
+        parsed_output=$(parse_hostname "$@")
+        hostname=$(echo "$parsed_output" | head -n1)
+        remaining_args=$(echo "$parsed_output" | tail -n +2)
+        
+        # Convert remaining args back to array
+        eval "args=($remaining_args)"
+        
+        ssh -i $ssh_key_file devops@"$hostname" -L 8080:localhost:8080 -L 4433:localhost:4433 "${args[@]}"
+        ;;
+    scpto)
+        load_dotenv
+        # Parse hostname and remaining arguments
+        parsed_output=$(parse_hostname "$@")
+        hostname=$(echo "$parsed_output" | head -n1)
+        remaining_args=$(echo "$parsed_output" | tail -n +2)
+        
+        # Convert remaining args back to array
+        eval "args=($remaining_args)"
+        
+        # Check if we have at least 2 arguments (source and destination)
+        if [[ ${#args[@]} -lt 2 ]]; then
+            echo "Error: scpto requires source and destination arguments"
+            echo "Usage: $0 scpto [-h hostname] <source> <destination>"
+            exit 1
+        fi
+        
+        scp -i $ssh_key_file "${args[0]}" devops@"$hostname":"${args[1]}"
+        ;;
+    "help"|"-h"|"--help")
+        show_usage
+        ;;
+    "gen-ssh-key")
+        ssh-keygen -t rsa -b 4096 -C "$super_admin" -f $ssh_key_file.pub -N ""
+        ;;
+    *)
+        echo "Error: Unknown subcommand '$subcommand'"
+        show_usage
+        exit 1
+        ;;
+esac
