@@ -32,7 +32,7 @@ parse_hostname() {
     
     # If no hostname specified, use terraform output
     if [[ -z "$hostname" ]]; then
-        hostname=$(cd terraform && terraform output -raw service_ip)
+        hostname=$(cd terraform && terraform output -raw servers_ipv6["gpu"])
     fi
     
     # Return the hostname and remaining args
@@ -86,7 +86,11 @@ case "$subcommand" in
         if [ "$@" == "validate" ]; then
             terraform "$@"
         else
-            terraform "$@" -var-file=hetzner.tfvars -var-file=tailscale.tfvars
+            my_ip_address4=$(curl -s -4 ifconfig.me)/32
+            my_ip_address6=$(curl -s -6 ifconfig.me)/128
+            TF_VAR_my_ip_addresses=${my_ip_address4},${my_ip_address6}
+            echo "TF_VAR_my_ip_addresses=${TF_VAR_my_ip_addresses}"
+            terraform "$@" -var-file=hetzner.tfvars -var-file=tailscale.tfvars -var=my_ip_addresses="${TF_VAR_my_ip_addresses}"
         fi
         popd
         ;;
@@ -130,8 +134,8 @@ case "$subcommand" in
             echo "Usage: $0 scpto [-h hostname] <source> <destination>"
             exit 1
         fi
-        
-        scp -i $ssh_key_file "${args[0]}" devops@"$hostname":"${args[1]}"
+
+        echo scp -i $ssh_key_file "${args[0]}" "devops@$hostname:${args[1]}"
         ;;
     "help"|"-h"|"--help")
         show_usage
