@@ -2,6 +2,12 @@
 
 ---
 
+## Acknowledgements
+
+- [Marine Guyot](https://codingresearcher.com/) - for testing this logic on Linux/GPU
+
+---
+
 ## Where are we going today - and why?
 > LLMs are a new kind of computer, and you program them in English
 >         Andrej Karpathy
