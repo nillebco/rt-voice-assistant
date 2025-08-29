@@ -12,7 +12,7 @@ variable "instances" {
 
 variable "server_type" {
   # https://www.hetzner.com/cloud/
-  default = "cx52"
+  default = "cx22"
 }
 
 variable "os_type" {
@@ -37,6 +37,6 @@ variable "tailscale_auth_key" {
   sensitive = true
 }
 
-variable "my_ip_address" {
-  default = "91.169.241.38"
+variable "my_ip_addresses" {
+  default = ""
 }

@@ -10,7 +10,7 @@ resource "hcloud_server" "podman" {
     service = var.service_name
   }
   public_net {
-    ipv4_enabled = false
+    ipv4_enabled = true
     ipv6_enabled = true
   }
   user_data = templatefile("user_data.yml", {
@@ -19,8 +19,5 @@ resource "hcloud_server" "podman" {
     TAILSCALE_AUTH_KEY = var.tailscale_auth_key
     TAILSCALE_DOMAIN = var.tailscale_domain
     SERVICE_NAME = var.service_name
-    B64_DEVOPS_CONTENT = base64encode(file("${path.module}/configuration/devops"))
-    B64_DOCKER_COMPOSE_CONTENT = base64encode(file("${path.module}/configuration/docker-compose.yaml"))
-    B64_DOTENV_CONTENT = base64encode(file("${path.module}/configuration/.env"))
   })
 }
