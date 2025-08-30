@@ -10,6 +10,33 @@ import sounddevice as sd
 import soundfile as sf
 
 
+def find_working_input_device():
+    """Find a working input device, falling back to the first available one."""
+    try:
+        # Try default device first
+        default_device = sd.default.device[0]
+        if default_device >= 0:
+            # Test if default device works
+            sd.query_devices(default_device)
+            return default_device
+    except:
+        pass
+    
+    # Find first available input device
+    devices = sd.query_devices()
+    for i, device in enumerate(devices):
+        if device['max_inputs'] > 0:
+            try:
+                # Test if this device works
+                sd.query_devices(i)
+                return i
+            except:
+                continue
+    
+    # If all else fails, return None (will use system default)
+    return None
+
+
 @dataclass
 class ListenOptions:
     samplerate: int = 16000
@@ -17,6 +44,7 @@ class ListenOptions:
     frames_per_callback: int = 1024
     filename: str = f"capture_{datetime.now().strftime('%Y%m%d-%H%M%S')}.wav"
     dtype: str = "int16"
+    device: int = None  # Audio device ID, None for default
     process_frame: Callable[[np.ndarray], None] = None
 
 
@@ -74,6 +102,15 @@ def listen(options: ListenOptions):
     if not options.process_frame:
         print("WARN: No process_frame callback provided.")
 
+    # Determine which device to use
+    device_to_use = options.device
+    if device_to_use is None:
+        device_to_use = find_working_input_device()
+        if device_to_use is not None:
+            print(f"Using input device {device_to_use}")
+        else:
+            print("Using system default input device")
+
     # Open an incremental writer; no need to know total duration
     with (
         sf.SoundFile(
@@ -90,6 +127,7 @@ def listen(options: ListenOptions):
             blocksize=options.frames_per_callback,
             callback=audio_callback,
             latency="low",  # hint; driver may choose nearest
+            device=device_to_use,  # Use specified device or fallback
         ),
     ):
         while running:

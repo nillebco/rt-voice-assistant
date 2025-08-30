@@ -12,11 +12,12 @@
 import logging
 import os
 from datetime import datetime
+import argparse
 
 import numpy as np
 import soundfile as sf
 
-from ..bricks.audio import prepare_for_write
+from ..bricks.audio import prepare_for_write, list_audio_devices
 from ..bricks.frame_processor import Callbacks, FrameProcessor, FrameProcessorOptions
 from ..bricks.listen import ListenOptions, listen
 from ..bricks.stt.whispercpp import transcribe
@@ -83,7 +84,16 @@ class Transcriber:
 
 
 if __name__ == "__main__":
-    # WHISPER_CPP_DIR="/Users/nilleb/dev/nillebco/whisper-ane/whisper.cpp" uv run -m rt_voice_assistant.cli.transcribe
+    # WHISPER_CPP_DIR="/Users/nilleb/dev/nillebco/whisper-ane" uv run -m rt_voice_assistant.cli.transcribe
+    parser = argparse.ArgumentParser(description="Real-time voice transcription")
+    parser.add_argument("--list-devices", action="store_true", help="List available audio devices")
+    parser.add_argument("--device", type=int, help="Audio device ID to use")
+    args = parser.parse_args()
+    
+    if args.list_devices:
+        list_audio_devices()
+        exit(0)
+    
     if not os.path.isdir("audios"):
         os.mkdir("audios")
 
@@ -94,6 +104,7 @@ if __name__ == "__main__":
         frames_per_callback=512,
         filename=f"audios/capture_{datetime.now().strftime('%Y%m%d-%H%M%S')}.wav",
         dtype="int16",
+        device=args.device,  # Use specified device or None for default
         process_frame=transcriber,
     )
     listen(options)

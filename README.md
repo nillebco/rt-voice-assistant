@@ -192,3 +192,39 @@ pushd rt-voice-assistant
 
 - Detect the spoken language
 - Reduce the pauses in the input
+
+## Troubleshooting
+
+### Audio Device Issues
+
+If you encounter PortAudio errors like `Error querying device -1`, it usually means there's an issue with audio device configuration. Here are some solutions:
+
+1. **List available audio devices:**
+   ```sh
+   uv run -m rt_voice_assistant.cli --list-devices
+   # or for transcription only:
+   uv run -m rt_voice_assistant.cli.transcribe --list-devices
+   ```
+
+2. **Specify a specific audio device:**
+   ```sh
+   uv run -m rt_voice_assistant.cli --device 0
+   # or for transcription only:
+   uv run -m rt_voice_assistant.cli.transcribe --device 0
+   ```
+
+3. **Common issues and solutions:**
+   - **Headless server**: Install and configure PulseAudio or ALSA
+   - **Docker container**: Ensure audio devices are properly mapped
+   - **Permission issues**: Check if your user has access to audio devices
+   - **No audio devices**: Install audio drivers or use a virtual audio device
+
+4. **For headless environments**, you can create a virtual audio device:
+   ```sh
+   # On Ubuntu/Debian
+   sudo apt-get install pulseaudio-utils
+   pactl load-module module-null-sink sink_name=virtual_speaker sink_properties=device.description=virtual_speaker
+   pactl load-module module-null-source source_name=virtual_mic source_properties=device.description=virtual_mic
+   ```
+
+The system will automatically try to find a working input device if none is specified.
