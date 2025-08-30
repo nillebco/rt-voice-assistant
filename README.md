@@ -221,3 +221,4 @@ chmod 755 devops
 
 - Detect the spoken language
 - Reduce the pauses in the input
+- Finish the web API use case
