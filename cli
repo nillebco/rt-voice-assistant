@@ -93,6 +93,22 @@ show_usage() {
     echo "  $0 apply"
 }
 
+llama_cpp_up() {
+    model=${1:-$DEFAULT_LLM_MODEL}
+    pushd rt-voice-assistant
+    docker run --rm --name llm-${model} -v ./models:/models -p 11434:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/${model} --port 11434 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
+    popd
+}
+
+llama_cpp_down() {
+    model=${1:-$DEFAULT_LLM_MODEL}
+    docker stop llm-${model}
+}
+
+ollama_up() {
+    ollama serve
+}
+
 # Check if subcommand is provided
 if [ $# -eq 0 ]; then
     echo "Error: No subcommand provided"
@@ -181,6 +197,15 @@ case "$subcommand" in
         if [[ "$@" == *"ollama"* ]]; then
             download_ollama
         fi
+        ;;
+    "llama_cpp-up")
+        llama_cpp_up $1
+        ;;
+    "llama_cpp-down")
+        llama_cpp_down $1
+        ;;
+    "ollama-up")
+        ollama_up
         ;;
     *)
         echo "Error: Unknown subcommand '$subcommand'"
