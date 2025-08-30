@@ -174,6 +174,7 @@ MODEL=qwen2-1_5b-instruct.Q4_K_M.gguf
 Ideally this works:
 
 ```sh
+# you can specify optional keywords to the download command, such as llamacpp or ollama - to download a few models
 ./cli download
 uv sync
 uv run -m rt_voice_assistant.cli.transcribe audios/jfk.wav
