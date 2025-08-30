@@ -12,6 +12,7 @@
 import logging
 import os
 from datetime import datetime
+import sys
 
 import numpy as np
 import soundfile as sf
@@ -86,6 +87,18 @@ if __name__ == "__main__":
     # WHISPER_CPP_DIR="/Users/nilleb/dev/nillebco/whisper-ane/whisper.cpp" uv run -m rt_voice_assistant.cli.transcribe
     if not os.path.isdir("audios"):
         os.mkdir("audios")
+
+    filename = None
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+
+    if filename:
+        transcribe(
+            model="small",
+            language="en",
+            input_wav_path=filename,
+        )
+        exit(0)
 
     transcriber = Transcriber(filename_fmt="audios/voice_{}.wav")
     options = ListenOptions(
