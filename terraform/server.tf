@@ -15,7 +15,7 @@ resource "hcloud_server" "podman" {
   }
   user_data = templatefile("user_data.yml", {
     # terraform read the content of the file at the path specified as a variable
-    SSH_KEY_CONTENT = file(var.ssh_key_path)
+    SSH_KEY_CONTENT = file(local.ssh_key_file)
     TAILSCALE_AUTH_KEY = var.tailscale_auth_key
     TAILSCALE_DOMAIN = var.tailscale_domain
     SERVICE_NAME = var.service_name

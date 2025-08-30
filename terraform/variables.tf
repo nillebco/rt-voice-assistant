@@ -19,7 +19,7 @@ variable "os_type" {
   default = "ubuntu-24.04"
 }
 
-variable "ssh_key_path" {
+variable "ssh_key_file" {
   default = "~/.ssh/id_rsa.pub"
 }
 

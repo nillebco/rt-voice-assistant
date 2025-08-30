@@ -82,15 +82,15 @@ case "$subcommand" in
             echo "Usage: $0 tf <terraform-subcommand>"
             exit 1
         fi
+        load_dotenv
         pushd terraform
-        if [ "$@" == "validate" ]; then
+        if [ "$1" == "validate" ] || [ "$1" == "output" ]; then
             terraform "$@"
         else
             my_ip_address4=$(curl -s -4 ifconfig.me)/32
             my_ip_address6=$(curl -s -6 ifconfig.me)/128
-            TF_VAR_my_ip_addresses=${my_ip_address4},${my_ip_address6}
-            echo "TF_VAR_my_ip_addresses=${TF_VAR_my_ip_addresses}"
-            terraform "$@" -var-file=hetzner.tfvars -var-file=tailscale.tfvars -var=my_ip_addresses="${TF_VAR_my_ip_addresses}"
+            my_ip_addresses=${my_ip_address4},${my_ip_address6}
+            terraform "$@" -var-file=hetzner.tfvars -var-file=tailscale.tfvars -var=my_ip_addresses="${my_ip_addresses}" -var=ssh_key_file="${ssh_key_file}"
         fi
         popd
         ;;
@@ -135,7 +135,7 @@ case "$subcommand" in
             exit 1
         fi
 
-        echo scp -i $ssh_key_file "${args[0]}" "devops@$hostname:${args[1]}"
+        scp -i $ssh_key_file "${args[0]}" "devops@$hostname:${args[1]}"
         ;;
     "help"|"-h"|"--help")
         show_usage

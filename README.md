@@ -169,25 +169,26 @@ OPENAI_BASE_URL=http://localhost:11434/v1
 MODEL=qwen2-1_5b-instruct.Q4_K_M.gguf
 ```
 
-## Future evolutions
-
-- Detect the spoken language
-- Reduce the pauses in the input
-
 ## provisioning on hetzner
 
 create a file terraform/tailscale.vars following the sample
 create a file terraform/hetzner.vars following the sample
 add a line ssh_key_file=~/.ssh/id_rsa to your .env
 
+```sh
 ./cli tf apply
-(please note the server ip in the output; wait a couple minutes for the user_data.yaml to complete)
+hostname=$(./cli tf output --json servers_ipv4 | grep '{' | jq -r '.gpu')
 ./cli scpto -h $hostname terraform/configuration/devops devops
 ./cli ssh -h $hostname
 chmod 755 devops
 ./devops download
 pushd rt-voice-assistant
-mkdir audios
-curl https://raw.githubusercontent.com/ggml-org/whisper.cpp/refs/heads/master/samples/jfk.wav -o audios/jfk.wav
-popd
 ./devops transcribe audios/jfk.wav
+./devops llm-up
+./devops llm-down
+```
+
+## Future evolutions
+
+- Detect the spoken language
+- Reduce the pauses in the input
