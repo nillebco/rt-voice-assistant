@@ -169,11 +169,27 @@ OPENAI_BASE_URL=http://localhost:11434/v1
 MODEL=qwen2-1_5b-instruct.Q4_K_M.gguf
 ```
 
+## run on linux
+
+Ideally this works:
+
+```sh
+./cli download
+uv sync
+uv run -m rt_voice_assistant.cli.transcribe audios/jfk.wav
+uv run -m rt_voice_assistant.cli.say "hello world"
+uv run -m rt_voice_assistant.cli
+```
+
 ## provisioning on hetzner
 
-create a file terraform/tailscale.vars following the sample
-create a file terraform/hetzner.vars following the sample
-add a line ssh_key_file=~/.ssh/id_rsa to your .env
+The scripts have been tested on a Hetzner server - only partially because such servers don't have a audio device.
+
+If you'd like to use the tf scripts to provision one:
+
+- create a file terraform/tailscale.vars following the sample
+- create a file terraform/hetzner.vars following the sample
+- add a line `ssh_key_file=~/.ssh/id_rsa` to your .env (assuming you have such a file already - otherwise try `./cli gen-ssh-key`)
 
 ```sh
 ./cli tf apply
@@ -186,6 +202,7 @@ pushd rt-voice-assistant
 ./devops transcribe audios/jfk.wav
 ./devops llm-up
 ./devops llm-down
+./devops say "hello world"
 ```
 
 ## Future evolutions
