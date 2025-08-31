@@ -88,6 +88,12 @@ The `sample-web-client` folder contains a web application (in React) showing how
 You must have access to an LLM accessible through a OpenAI like API.
 And you must download a few files before proceeding.
 
+You have installed the necessary audio libraries at the OS level.
+eg.
+
+- portaudio portaudio-devel on redhat-like distributions
+- libportaudio2, portaudio19-dev, libportaudiocpp0, libasound2, libasound2-plugins, alsa-utils on ubuntu-like distributions
+
 ### on Ubuntu or Debian -- using Docker and llama_cpp
 
 (The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
