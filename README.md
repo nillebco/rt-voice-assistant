@@ -121,7 +121,7 @@ curl http://localhost:11434/v1/chat/completions \
 (The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
 
 ```sh
-./cli download llama_cpp
+./cli download ollama
 ./cli ollama-up
 curl http://localhost:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -146,7 +146,7 @@ brew install ffmpeg ollama
 ./cli download ollama
 ollama serve
 
-# STT - compile whisper.cpp
+# STT - compile whisper.cpp with native acceleration
 cd $HOME
 git clone https://github.com/ggml-org/whisper.cpp
 pushd whisper.cpp
