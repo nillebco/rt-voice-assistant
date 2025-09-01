@@ -17,3 +17,4 @@ out-*.txt
 .env
 models
 audios
+.DS_Store
