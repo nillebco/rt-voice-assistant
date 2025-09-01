@@ -93,11 +93,12 @@ if __name__ == "__main__":
         filename = sys.argv[1]
 
     if filename:
-        transcribe(
+        transcription = transcribe(
             model="small",
             language="en",
             input_wav_path=filename,
         )
+        print(f"Transcription: {transcription}")
         exit(0)
 
     transcriber = Transcriber(filename_fmt="audios/voice_{}.wav")

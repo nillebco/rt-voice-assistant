@@ -97,7 +97,54 @@ eg.
 
 In the following sections we provide sample setup scripts for a few target architectures/distributions.
 
-### on Ubuntu or Debian -- using Docker and llama_cpp
+### whisper.cpp - Caveat
+
+WhisperCpp is a good tradeoff in terms of practicity to execute a speech-to-text transcription.
+Yet it has to be compiled or executed via Docker. In this implementation we are trying to detect the binary location and if that fails we failsafe to the execution of a docker image.
+
+#### Compile whisperCpp on a Ubuntu-like
+
+```sh
+sudo apt install -y build-essential cmake git ffmpeg libsndfile1-dev portaudio19-dev
+cd $HOME
+git clone https://github.com/ggerganov/whisper.cpp.git
+cd whisper.cpp
+make
+```
+
+#### Compile whisperCpp on a RedHat-like
+
+```sh
+sudo dnf install -y gcc-c++ cmake git ffmpeg ffmpeg-devel libsndfile-devel portaudio-devel
+cd $HOME
+git clone https://github.com/ggerganov/whisper.cpp.git
+cd whisper.cpp
+make
+```
+
+#### Compile whispercpp on Mac (with native acceleration)
+
+```sh
+# STT - compile whisper.cpp with native acceleration
+cd $HOME
+git clone https://github.com/ggml-org/whisper.cpp
+cd whisper.cpp
+cmake -B build -DWHISPER_COREML=1
+cmake --build build -j --config Release
+uv init .
+uv add ane_transformers openai-whisper coremltools torch
+uv run ./models/generate-coreml-model.sh base.en
+uv run ./models/generate-coreml-model.sh small.en
+uv run ./models/generate-coreml-model.sh medium.en
+./models/download-ggml-model.sh base.en
+./models/download-ggml-model.sh small.en
+./models/download-ggml-model.sh medium.en
+./build/bin/whisper-cli -m models/ggml-base.en.bin -f samples/jfk.wav
+./build/bin/whisper-cli -m models/ggml-small.en.bin -f samples/jfk.wav
+./build/bin/whisper-cli -m models/ggml-medium.en.bin -f samples/jfk.wav
+```
+
+### llama-cpp using Docker, on Ubuntu or Debian
 
 (The llama.cpp server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
 
@@ -119,7 +166,7 @@ curl http://localhost:11434/v1/chat/completions \
   }'
 ```
 
-### on Ubuntu or Debian -- using Docker and ollama
+### ollama, on Ubuntu or Debian
 
 ```sh
 ./cli download common ollama
@@ -138,11 +185,11 @@ curl http://localhost:11434/v1/chat/completions \
   }'
 ```
 
-### on MacOS using Homebrew (https://brew.sh/) and ollama
+### ollama, on MacOS using Homebrew (https://brew.sh/)
 
 ```sh
 # LLM setup
-brew install ffmpeg ollama
+brew install ollama
 ./cli download common ollama
 ollama serve
 curl http://localhost:11434/v1/chat/completions \
@@ -157,24 +204,6 @@ curl http://localhost:11434/v1/chat/completions \
     "max_tokens": 100,
     "temperature": 0.7
   }'
-
-# STT - compile whisper.cpp with native acceleration
-cd $HOME
-git clone https://github.com/ggml-org/whisper.cpp
-pushd whisper.cpp
-cmake -B build -DWHISPER_COREML=1
-cmake --build build -j --config Release
-uv init .
-uv add ane_transformers openai-whisper coremltools torch
-uv run ./models/generate-coreml-model.sh base.en
-uv run ./models/generate-coreml-model.sh small.en
-uv run ./models/generate-coreml-model.sh medium.en
-./models/download-ggml-model.sh base.en
-./models/download-ggml-model.sh small.en
-./models/download-ggml-model.sh medium.en
-./build/bin/whisper-cli -m models/ggml-base.en.bin -f samples/jfk.wav
-./build/bin/whisper-cli -m models/ggml-small.en.bin -f samples/jfk.wav
-./build/bin/whisper-cli -m models/ggml-medium.en.bin -f samples/jfk.wav
 ```
 
 ## Configuration
