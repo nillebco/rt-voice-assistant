@@ -30,13 +30,16 @@ Every time the voice assistant detects a sentence end, it will not process any f
 
 ## For the impatients
 
-Create a .env file with a structure like this
+You are on Mac, you have built whisper.cpp optimized for your architecture and installed ollama and ffmpeg using brew.
+Now you can create a .env file:
 
 ```sh
 OPENAI_API_KEY=sk-or-v1-aOpenRoutersecretkeyhere
 # if you don't have this yet, check the section about whisper-cpp in the follow.
 WHISPER_CPP_DIR="/Users/nilleb/whisper.cpp"
 ```
+
+And execute
 
 ```sh
 uv sync
@@ -45,7 +48,7 @@ uv run -m rt_voice_assistant.cli
 
 ## Slides
 
-The slides presented are in the doc/slides folder. Also: You can view them on [RawGitHack](https://raw.githack.com/nillebco/rt-voice-assistant/main/doc/slides/index.html).
+The slides presented are in the doc/slides folder. Also: you can view them on [RawGitHack](https://raw.githack.com/nillebco/rt-voice-assistant/main/doc/slides/index.html).
 
 ## Repository structure
 
@@ -85,10 +88,11 @@ The `sample-web-client` folder contains a web application (in React) showing how
 
 ## Pre-requirements
 
+At the end of this section you will have installed all the requirements for this software:
+
 You must have access to an LLM accessible through a OpenAI like API.
 You must download a few files before proceeding.
-
-You have installed the necessary audio libraries at the OS level.
+You must have installed the necessary audio libraries and multimedia processing tools at the OS level.
 eg.
 
 - redhat-like distributions: portaudio portaudio-devel ffmpeg ffmpeg-devel
@@ -97,12 +101,12 @@ eg.
 
 In the following sections we provide sample setup scripts for a few target architectures/distributions.
 
-### whisper.cpp - Caveat
+### whisper.cpp - caveat
 
 WhisperCpp is a good tradeoff in terms of practicity to execute a speech-to-text transcription.
 Yet it has to be compiled or executed via Docker. In this implementation we are trying to detect the binary location and if that fails we failsafe to the execution of a docker image.
 
-#### Compile whisperCpp on a Ubuntu-like
+#### Compile whisper.cpp on a Ubuntu-like
 
 ```sh
 sudo apt install -y build-essential cmake git ffmpeg libsndfile1-dev portaudio19-dev
@@ -112,7 +116,7 @@ cd whisper.cpp
 make
 ```
 
-#### Compile whisperCpp on a RedHat-like
+#### Compile whisper.cpp on a RedHat-like
 
 ```sh
 sudo dnf install -y gcc-c++ cmake git ffmpeg ffmpeg-devel libsndfile-devel portaudio-devel
@@ -122,7 +126,7 @@ cd whisper.cpp
 make
 ```
 
-#### Compile whispercpp on Mac (with native acceleration)
+#### Compile whisper.cpp on Mac (with native acceleration)
 
 ```sh
 # STT - compile whisper.cpp with native acceleration
@@ -136,6 +140,7 @@ uv add ane_transformers openai-whisper coremltools torch
 uv run ./models/generate-coreml-model.sh base.en
 uv run ./models/generate-coreml-model.sh small.en
 uv run ./models/generate-coreml-model.sh medium.en
+# you can avoid downloading whisper.cpp models further
 ./models/download-ggml-model.sh base.en
 ./models/download-ggml-model.sh small.en
 ./models/download-ggml-model.sh medium.en
@@ -190,7 +195,7 @@ curl http://localhost:11434/v1/chat/completions \
 ```sh
 # LLM setup
 brew install ollama
-./cli download common ollama
+./cli download ollama
 ollama serve
 curl http://localhost:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -208,7 +213,33 @@ curl http://localhost:11434/v1/chat/completions \
 
 ## Configuration
 
-Your .env file will be used to store the configuration
+Your .env file will be used to store the configuration and drive the `rt-voice-assistant behavior`.
+
+### Specify the models directory (whisper.cpp)
+
+```sh
+# where to find your whisper models
+WHISPER_MODELS_DIR=/Users/user/models
+```
+
+### Use a local whisper.cpp install
+
+```sh
+# the executable will be searched at $WHISPER_CPP_DIR/build/bin/whisper-cli
+# the default location is $HOME/whisper.cpp
+# if you have followed the instructions in the pre-requirements you can avoit setting this variable
+WHISPER_CPP_DIR=/home/user/whisper.cpp
+```
+
+### Use a dockerized whisper.cpp
+
+```sh
+# whether you need to use sudo to run your containers
+WHISPER_CPP_USE_ELEVATED_DOCKER=true
+# you could use a main-cuda, main-musa, main-intel
+# check https://github.com/ggml-org/whisper.cpp/pkgs/container/whisper.cpp/versions
+WHISPER_CPP_DOCKER_IMAGE=ghcr.io/ggml-org/whisper.cpp:main
+```
 
 ### Use a local ollama instance
 
@@ -229,15 +260,35 @@ OPENAI_BASE_URL=http://localhost:11434/v1
 MODEL=qwen2-1_5b-instruct.Q4_K_M.gguf
 ```
 
-## run on linux
+### Use a model hosted on openrouter
 
-Make sure you completed the pre-requirements.
+The default host used by our software is `https://openrouter.ai/api/v1`
 
 ```sh
+OPENAI_API_KEY=sk-or-v1-aOpenRoutersecretkeyhere
+MODEL=gemma3
+```
+
+### Use a model hosted by OpenAI
+
+```sh
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_API_KEY=sk-openaiapikeyhere
+MODEL=gemma3
+```
+
+## typical usage
+
+Make sure you completed the pre-requirements most adapted to your distribution/operating system.
+
+```sh
+# restore the python dependencies
 uv sync
+# run the transcription pipeline - remove the file name to transcribe your voice
 uv run -m rt_voice_assistant.cli.transcribe audios/jfk.wav
+# let kokoro af_heart pronounce these words
 uv run -m rt_voice_assistant.cli.say "hello world"
-# for the next step you shall have a OpenAI compatible API running on https://localhost:11434 (ollama) or a OpenRouter API key. Check the configuration and pre-requirements sections.
+# the full loop: record your voice, transcribe, send to a model, pronounce the response
 uv run -m rt_voice_assistant.cli
 ```
 
@@ -269,10 +320,10 @@ chmod 755 devops
 The `./cli download` allows you to download any of
 
 - common -- used by stt and tts
+- tts -- tts models and data only
+- stt -- stt models only
 - ollama -- images (a selection)
 - llama.cpp -- gguf model files (a selection)
-
-models
 
 ## Future evolutions
 

@@ -138,7 +138,6 @@ def transcribe(
     input_wav_path: str,
     model: str = None,
     language: str = None,
-    whisper_cpp_dir: str = None,
 ):
     if not os.path.isdir("outputs"):
         os.mkdir("outputs")
