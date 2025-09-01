@@ -30,7 +30,8 @@ Every time the voice assistant detects a sentence end, it will not process any f
 
 ## For the impatients
 
-You are on Mac, you have built whisper.cpp optimized for your architecture and installed ollama and ffmpeg using brew.
+You are on Mac, you have built whisper.cpp optimized for your architecture and installed uv, ollama and ffmpeg using brew.
+
 Now you can create a .env file:
 
 ```sh
@@ -100,6 +101,14 @@ eg.
 - macos: ffmpeg ollama
 
 In the following sections we provide sample setup scripts for a few target architectures/distributions.
+
+### uv - install python dependencies
+
+Find out more about [uv](https://docs.astral.sh/uv/)
+
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
 
 ### whisper.cpp - caveat
 
