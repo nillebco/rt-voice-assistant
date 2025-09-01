@@ -123,13 +123,16 @@ class Transcriber:
 
 
 if __name__ == "__main__":
-    # WHISPER_CPP_DIR="/Users/nilleb/dev/nillebco/whisper-ane/whisper.cpp" uv run -m rt_py.cli
-    transcriber = Transcriber(filename_fmt="voice_{}.wav")
+    # WHISPER_CPP_DIR="/Users/nilleb/dev/nillebco/whisper-ane/whisper.cpp" uv run -m rt_voice_assistant.cli
+    if not os.path.isdir("audios"):
+        os.mkdir("audios")
+
+    transcriber = Transcriber(filename_fmt="audios/voice_{}.wav")
     options = ListenOptions(
         samplerate=16000,
         channels=1,
         frames_per_callback=512,
-        filename=f"capture_{datetime.now().strftime('%Y%m%d-%H%M%S')}.wav",
+        filename=f"audios/capture_{datetime.now().strftime('%Y%m%d-%H%M%S')}.wav",
         dtype="int16",
         process_frame=transcriber,
     )

@@ -1,0 +1,55 @@
+#cloud-config
+users:
+  - name: devops
+    groups: users, admin
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${SSH_KEY_CONTENT}
+package_update: true
+package_upgrade: true
+packages:
+  - fail2ban
+  - ufw
+  - podman
+  - libportaudio2
+  - portaudio19-dev
+  - libportaudiocpp0
+  - libasound2
+  - libasound2-plugins
+  - alsa-utils
+runcmd:
+  - printf "[sshd]\nenabled = true\nbanaction = iptables-multiport" > /etc/fail2ban/jail.local
+  - systemctl enable ssh
+  - systemctl enable fail2ban
+  - systemctl start fail2ban
+  - ufw allow 'OpenSSH'
+  - ufw enable
+  - sed -ie '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -ie '/^PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -ie '/^X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
+  - sed -ie '/^#MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
+  - sed -ie '/^#AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
+  - sed -ie '/^#AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
+  - sed -ie '/^#AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh/authorized_keys/' /etc/ssh/sshd_config
+  - sed -i '$a AllowUsers devops' /etc/ssh/sshd_config
+  - systemctl restart ssh
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - loginctl enable-linger 'devops'
+  - sudo tailscale set --operator=devops
+  - su - devops -c "tailscale up --authkey=${TAILSCALE_AUTH_KEY}"
+  - su - devops -c "tailscale cert ${SERVICE_NAME}.${TAILSCALE_DOMAIN}"
+  - su - devops -c "echo 'alias docker=podman' >> /home/devops/.bashrc"
+  - su - devops -c "curl -LsSf https://astral.sh/uv/install.sh | sh"
+  - mkdir -p /etc/containers
+  - |
+    cat > /etc/containers/containers.conf << 'EOF'
+    [engine]
+    [engine.resource_limits]
+    memory = "28G"
+    cpu_shares = 1024
+    cpu_quota = 1500000
+    cpu_period = 100000
+    pids_limit = 4096
+    EOF
+  - reboot

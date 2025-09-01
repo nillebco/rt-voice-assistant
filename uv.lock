@@ -2228,7 +2228,7 @@ dependencies = [
     { name = "soundfile" },
     { name = "tiktoken" },
     { name = "uvicorn", extra = ["standard"] },
-    { name = "webrtcvad" },
+    { name = "webrtcvad", marker = "platform_machine == 'aarch64' or platform_machine == 'arm64'" },
     { name = "whisperx" },
 ]
 
@@ -2248,7 +2248,7 @@ requires-dist = [
     { name = "soundfile", specifier = ">=0.13.1" },
     { name = "tiktoken", specifier = ">=0.11.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0" },
-    { name = "webrtcvad", specifier = ">=2.0.10" },
+    { name = "webrtcvad", marker = "platform_machine == 'aarch64' or platform_machine == 'arm64'", specifier = ">=2.0.10" },
     { name = "whisperx", specifier = ">=3.4.2" },
 ]
 

@@ -1,0 +1,215 @@
+#!/bin/bash
+# visit https://dash.cloudflare.com/profile/api-tokens to add the ipv6 address to the api token
+
+load_dotenv() {
+    if [ -f .env ]; then
+        source .env
+    fi
+}
+
+download_common() {
+  mkdir -p models
+  curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" -o models/kokoro-v1.0.onnx
+  curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o models/voices-v1.0.bin
+  # whisper ggmls - https://huggingface.co/ggerganov/whisper.cpp/tree/main
+  curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin -o models/ggml-tiny.en.bin
+  curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin -o models/ggml-base.en.bin
+  curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin -o models/ggml-small.en.bin
+  mkdir -p audios
+  curl https://raw.githubusercontent.com/ggml-org/whisper.cpp/refs/heads/master/samples/jfk.wav -o audios/jfk.wav
+}
+
+download_llama_cpp() {
+  # 25GiB
+  curl -L -o models/mixtral-8x7b-instruct.Q4_K_M.gguf \
+    https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
+  # 941MiB
+  curl -L -o models/qwen2-1_5b-instruct.Q4_K_M.gguf \
+    https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1_5b-instruct-q4_k_m.gguf
+}
+
+download_ollama() {
+    # 14GiB
+    ollama pull qwen2.5:14b
+    # 5.2GiB
+    ollama pull qwen3:8b
+    # 4.4 GiB
+    ollama pull mistral:7b
+}
+
+# Function to parse hostname option
+parse_hostname() {
+    local hostname=""
+    local args=()
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h)
+                if [[ -n "$2" && "$2" != -* ]]; then
+                    hostname="$2"
+                    shift 2
+                else
+                    echo "Error: -h option requires a hostname argument"
+                    exit 1
+                fi
+                ;;
+            *)
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+    
+    # If no hostname specified, use terraform output
+    if [[ -z "$hostname" ]]; then
+        hostname=$(cd terraform && terraform output -raw servers_ipv6["gpu"])
+    fi
+    
+    # Return the hostname and remaining args
+    echo "$hostname"
+    printf '%s\n' "${args[@]}"
+}
+
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 <subcommand> [options]"
+    echo ""
+    echo "Available subcommands:"
+    echo "  tf <terraform-subcommand>  - Run terraform with specified subcommand"
+    echo "  ssh [-h hostname]          - SSH to the server (default: terraform output)"
+    echo "  tunnel [-h hostname]       - SSH tunnel to the server (default: terraform output)"
+    echo "  scpto [-h hostname] <file> <dest> - Copy file to server (default: terraform output)"
+    echo "  help                       - Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 tf plan"
+    echo "  $0 tf apply"
+    echo "  $0 tf destroy"
+    echo "  $0 ssh"
+    echo "  $0 ssh -h 192.168.1.100"
+    echo "  $0 tunnel -h example.com"
+    echo "  $0 scpto file.txt /tmp/"
+    echo "  $0 scpto -h example.com file.txt /tmp/"
+    echo "  $0 apply"
+}
+
+llama_cpp_up() {
+    model=${1:-$DEFAULT_LLM_MODEL}
+    pushd rt-voice-assistant
+    docker run --rm --name llm-${model} -v ./models:/models -p 11434:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/${model} --port 11434 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
+    popd
+}
+
+llama_cpp_down() {
+    model=${1:-$DEFAULT_LLM_MODEL}
+    docker stop llm-${model}
+}
+
+ollama_up() {
+    ollama serve
+}
+
+# Check if subcommand is provided
+if [ $# -eq 0 ]; then
+    echo "Error: No subcommand provided"
+    show_usage
+    exit 1
+fi
+
+# Get the subcommand
+subcommand="$1"
+shift
+
+# Handle different subcommands
+case "$subcommand" in
+    "tf")
+        if [ $# -eq 0 ]; then
+            echo "Error: No terraform subcommand provided"
+            echo "Usage: $0 tf <terraform-subcommand>"
+            exit 1
+        fi
+        load_dotenv
+        pushd terraform
+        if [ "$1" == "validate" ] || [ "$1" == "output" ]; then
+            terraform "$@"
+        else
+            my_ip_address4=$(curl -s -4 ifconfig.me)/32
+            my_ip_address6=$(curl -s -6 ifconfig.me)/128
+            my_ip_addresses=${my_ip_address4},${my_ip_address6}
+            terraform "$@" -var-file=hetzner.tfvars -var-file=tailscale.tfvars -var=my_ip_addresses="${my_ip_addresses}" -var=ssh_key_file="${ssh_key_file}"
+        fi
+        popd
+        ;;
+    ssh)
+        load_dotenv
+        # Parse hostname and remaining arguments
+        parsed_output=$(parse_hostname "$@")
+        hostname=$(echo "$parsed_output" | head -n1)
+        remaining_args=$(echo "$parsed_output" | tail -n +2)
+        
+        # Convert remaining args back to array
+        eval "args=($remaining_args)"
+        
+        ssh -i $ssh_key_file devops@"$hostname" "${args[@]}"
+        ;;
+    tunnel)
+        load_dotenv
+        # Parse hostname and remaining arguments
+        parsed_output=$(parse_hostname "$@")
+        hostname=$(echo "$parsed_output" | head -n1)
+        remaining_args=$(echo "$parsed_output" | tail -n +2)
+        
+        # Convert remaining args back to array
+        eval "args=($remaining_args)"
+        
+        ssh -i $ssh_key_file devops@"$hostname" -L 8080:localhost:8080 -L 4433:localhost:4433 "${args[@]}"
+        ;;
+    scpto)
+        load_dotenv
+        # Parse hostname and remaining arguments
+        parsed_output=$(parse_hostname "$@")
+        hostname=$(echo "$parsed_output" | head -n1)
+        remaining_args=$(echo "$parsed_output" | tail -n +2)
+        
+        # Convert remaining args back to array
+        eval "args=($remaining_args)"
+        
+        # Check if we have at least 2 arguments (source and destination)
+        if [[ ${#args[@]} -lt 2 ]]; then
+            echo "Error: scpto requires source and destination arguments"
+            echo "Usage: $0 scpto [-h hostname] <source> <destination>"
+            exit 1
+        fi
+
+        scp -i $ssh_key_file "${args[0]}" "devops@$hostname:${args[1]}"
+        ;;
+    "help"|"-h"|"--help")
+        show_usage
+        ;;
+    "gen-ssh-key")
+        ssh-keygen -t rsa -b 4096 -C "$super_admin" -f $ssh_key_file.pub -N ""
+        ;;
+    "download")
+        download_common
+        if [[ "$@" == *"llama_cpp"* ]]; then
+            download_llama_cpp
+        fi
+        if [[ "$@" == *"ollama"* ]]; then
+            download_ollama
+        fi
+        ;;
+    "llama_cpp-up")
+        llama_cpp_up $1
+        ;;
+    "llama_cpp-down")
+        llama_cpp_down $1
+        ;;
+    "ollama-up")
+        ollama_up
+        ;;
+    *)
+        echo "Error: Unknown subcommand '$subcommand'"
+        show_usage
+        exit 1
+        ;;
+esac

@@ -8,6 +8,7 @@
 # ]
 # ///
 
+import os
 from datetime import datetime
 
 import numpy as np
@@ -66,12 +67,15 @@ class Transcriber:
 
 
 if __name__ == "__main__":
-    transcriber = Transcriber(filename_fmt="voice_{}.wav")
+    if not os.path.isdir("audios"):
+        os.mkdir("audios")
+
+    transcriber = Transcriber(filename_fmt="audios/voice_{}.wav")
     options = ListenOptions(
         samplerate=16000,
         channels=1,
         frames_per_callback=512,
-        filename=f"capture_{datetime.now().strftime('%Y%m%d-%H%M%S')}.wav",
+        filename=f"audios/capture_{datetime.now().strftime('%Y%m%d-%H%M%S')}.wav",
         dtype="int16",
         process_frame=transcriber,
     )

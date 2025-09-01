@@ -31,7 +31,7 @@ signal.signal(signal.SIGINT, handle_sigint)
 
 if len(sys.argv) > 1:
     text = " ".join(sys.argv[1:])
-    samples, sample_rate = tts.create(text, voice=VOICE, language=LANGUAGE)
+    samples, sample_rate = tts.create(text, voice=VOICE, lang=LANGUAGE)
     sd.play(samples, sample_rate)
     sd.wait()
     exit(0)
@@ -42,6 +42,6 @@ while running:
     if not text:
         break
 
-    samples, sample_rate = tts.create(text, voice=VOICE, language=LANGUAGE)
+    samples, sample_rate = tts.create(text, voice=VOICE, lang=LANGUAGE)
     sd.play(samples, sample_rate)
     sd.wait()

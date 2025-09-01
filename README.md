@@ -83,19 +83,25 @@ The `api` file contains a sample FastAPI API exposing a few endpoints (inlcuding
 
 The `sample-web-client` folder contains a web application (in React) showing how the VAD works in the browser. It will call the API to transform the voice recording into another voice recording.
 
-## Requirements
+## Pre-requirements
 
-### on Ubuntu or Debian -- using Docker
+You must have access to an LLM accessible through a OpenAI like API.
+And you must download a few files before proceeding.
+
+You have installed the necessary audio libraries at the OS level.
+eg.
+
+- portaudio portaudio-devel on redhat-like distributions
+- libportaudio2, portaudio19-dev, libportaudiocpp0, libasound2, libasound2-plugins, alsa-utils on ubuntu-like distributions
+
+### on Ubuntu or Debian -- using Docker and llama_cpp
 
 (The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
 
 ```sh
-curl -L -o models/mixtral-8x7b-instruct.Q4_K_M.gguf \
-  https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
-curl -L -o models/qwen2-1_5b-instruct.Q4_K_M.gguf \
-  https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1_5b-instruct-q4_k_m.gguf
-docker run -v ./models:/models -p 11434:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/mixtral-8x7b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
-docker run -v ./models:/models -p 11434:8000 ghcr.io/ggml-org/llama.cpp:server -m /models/qwen2-1_5b-instruct.Q4_K_M.gguf --port 8000 --host 0.0.0.0 -n 512 --ctx-size 8192 --api-key sk-local
+./cli download llama_cpp
+# or mixtral-8x7b-instruct.Q4_K_M.gguf or any other model you will have downloaded
+./cli llama_cpp-up qwen2-1_5b-instruct.Q4_K_M.gguf
 curl http://localhost:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-local" \
@@ -108,22 +114,39 @@ curl http://localhost:11434/v1/chat/completions \
     "max_tokens": 100,
     "temperature": 0.7
   }'
-
-# STT - whisper.cpp
-docker pull ghcr.io/ggml-org/whisper.cpp:main
-
-# TTS - kokoroTTS
-curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" -o models/kokoro-v1.0.onnx
-curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o models/voices-v1.0.bin
 ```
 
-### on MacOS using Homebrew (https://brew.sh/)
+### on Ubuntu or Debian -- using Docker and ollama
+
+(The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
+
+```sh
+./cli download ollama
+./cli ollama-up
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-local" \
+  -d '{
+    "model": "qwen2.5:14b",
+    "messages": [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Write a haiku about Debian Linux."}
+    ],
+    "max_tokens": 100,
+    "temperature": 0.7
+  }'
+```
+
+### on MacOS using Homebrew (https://brew.sh/) and ollama
+
+These steps optimize whisper.cpp for the Apple Neural Engine (optimized on Mx processors)
 
 ```sh
 brew install ffmpeg ollama
+./cli download ollama
 ollama serve
 
-# STT - whisper.cpp
+# STT - compile whisper.cpp with native acceleration
 cd $HOME
 git clone https://github.com/ggml-org/whisper.cpp
 pushd whisper.cpp
@@ -140,10 +163,6 @@ uv run ./models/generate-coreml-model.sh medium.en
 ./build/bin/whisper-cli -m models/ggml-base.en.bin -f samples/jfk.wav
 ./build/bin/whisper-cli -m models/ggml-small.en.bin -f samples/jfk.wav
 ./build/bin/whisper-cli -m models/ggml-medium.en.bin -f samples/jfk.wav
-
-# TTS - kokoroTTS
-curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" -o models/kokoro-v1.0.onnx
-curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o models/voices-v1.0.bin
 ```
 
 ## Configuration
@@ -169,7 +188,43 @@ OPENAI_BASE_URL=http://localhost:11434/v1
 MODEL=qwen2-1_5b-instruct.Q4_K_M.gguf
 ```
 
+## run on linux
+
+Make sure you completed the pre-requirements.
+
+```sh
+uv sync
+uv run -m rt_voice_assistant.cli.transcribe audios/jfk.wav
+uv run -m rt_voice_assistant.cli.say "hello world"
+# for the next step you shall have a OpenAI compatible API running on https://localhost:11434 (ollama) or a OpenRouter API key. Check the configuration and pre-requirements sections.
+uv run -m rt_voice_assistant.cli
+```
+
+## provisioning on hetzner
+
+The scripts have been tested on a Hetzner server - only partially because such servers don't have a audio device. 😅
+
+If you'd like to use the tf scripts to provision one:
+
+- create a file terraform/tailscale.vars following the sample
+- create a file terraform/hetzner.vars following the sample
+- add a line `ssh_key_file=~/.ssh/id_rsa` to your .env (assuming you have such a file already - otherwise try `./cli gen-ssh-key`)
+
+```sh
+./cli tf apply
+hostname=$(./cli tf output --json servers_ipv4 | grep '{' | jq -r '.gpu')
+./cli scpto -h $hostname terraform/configuration/devops devops
+./cli ssh -h $hostname
+chmod 755 devops
+./devops download
+./devops transcribe audios/jfk.wav
+./devops llm-up
+./devops llm-down
+./devops say "hello world"
+```
+
 ## Future evolutions
 
 - Detect the spoken language
 - Reduce the pauses in the input
+- Finish the web API use case

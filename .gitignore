@@ -16,3 +16,4 @@ out-*.txt
 *.bin
 .env
 models
+audios
