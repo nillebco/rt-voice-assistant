@@ -235,6 +235,16 @@ chmod 755 devops
 ./devops say "hello world"
 ```
 
+## Downloading
+
+The `./cli download` allows you to download any of
+
+- common -- used by stt and tts
+- ollama -- images (a selection)
+- llama.cpp -- gguf model files (a selection)
+
+models
+
 ## Future evolutions
 
 - Detect the spoken language
