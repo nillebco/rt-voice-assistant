@@ -175,7 +175,7 @@ curl http://localhost:11434/v1/chat/completions \
 
 ```sh
 ./cli download common ollama
-./cli ollama-up
+ollama serve
 curl http://localhost:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-local" \

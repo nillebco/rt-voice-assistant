@@ -148,10 +148,6 @@ llama_cpp_down() {
     docker stop llm-${model}
 }
 
-ollama_up() {
-    ollama serve
-}
-
 # Check if subcommand is provided
 if [ $# -eq 0 ]; then
     echo "Error: No subcommand provided"
@@ -263,9 +259,6 @@ case "$subcommand" in
         ;;
     "llama_cpp-down")
         llama_cpp_down $1
-        ;;
-    "ollama-up")
-        ollama_up
         ;;
     *)
         echo "Error: Unknown subcommand '$subcommand'"
