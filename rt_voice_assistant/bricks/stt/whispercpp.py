@@ -150,7 +150,7 @@ def transcribe(
             f"{os.getcwd()}/audios:/audios",
             "-v",
             f"{os.getcwd()}/outputs:/outputs",
-            "whisper.cpp:main",
+            "ghcr.io/ggml-org/whisper.cpp:main",
             f'"{' '.join(args)}"',
         ]
 
