@@ -102,7 +102,7 @@ In the following sections we provide sample setup scripts for a few target archi
 (The llama.cpp server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
 
 ```sh
-./cli download llama_cpp
+./cli download common llama_cpp
 # or mixtral-8x7b-instruct.Q4_K_M.gguf or any other model you will have downloaded
 ./cli llama_cpp-up qwen2-1_5b-instruct.Q4_K_M.gguf
 curl http://localhost:11434/v1/chat/completions \
@@ -122,7 +122,7 @@ curl http://localhost:11434/v1/chat/completions \
 ### on Ubuntu or Debian -- using Docker and ollama
 
 ```sh
-./cli download ollama
+./cli download common ollama
 ./cli ollama-up
 curl http://localhost:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -143,7 +143,7 @@ curl http://localhost:11434/v1/chat/completions \
 ```sh
 # LLM setup
 brew install ffmpeg ollama
-./cli download ollama
+./cli download common ollama
 ollama serve
 curl http://localhost:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -234,6 +234,16 @@ chmod 755 devops
 ./devops llm-down
 ./devops say "hello world"
 ```
+
+## Downloading
+
+The `./cli download` allows you to download any of
+
+- common -- used by stt and tts
+- ollama -- images (a selection)
+- llama.cpp -- gguf model files (a selection)
+
+models
 
 ## Future evolutions
 
