@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
 import uuid
 
@@ -100,13 +101,15 @@ def transcribe(
     language: str = None,
     whisper_cpp_dir: str = None,
 ):
-    WHISPER_CPP_DIR = whisper_cpp_dir or os.getenv("WHISPER_CPP_DIR", "./whisper.cpp")
+    home = os.path.expanduser("~")
+    WHISPER_CPP_DIR = whisper_cpp_dir or os.getenv("WHISPER_CPP_DIR", f"{home}/whisper.cpp")
 
-    WHISPER_MODEL_FMT = f"{WHISPER_CPP_DIR}/models/ggml-" "{model}.{language}.bin"
+    WHISPER_MODEL_FMT = f"{WHISPER_CPP_DIR}/models/ggml-{{model}}.{{language}}.bin"
     WHISPER_BINARY = os.getenv(
         "WHISPER_BINARY", f"{WHISPER_CPP_DIR}/build/bin/whisper-cli"
     )
     DEFAULT_MODEL = "small"  # Default model to use when whisper-1 is specified
+    DEFAULT_DOCKER_IMAGE = "ghcr.io/ggml-org/whisper.cpp:main"
 
     if not os.path.isdir("outputs"):
         os.mkdir("outputs")
@@ -125,20 +128,21 @@ def transcribe(
         )
 
     cmd = []
-    args = whisper_cpp_args(model_path, input_wav_path, output_prefix)
     if os.path.exists(WHISPER_BINARY):
         cmd.append(WHISPER_BINARY)
+        args = whisper_cpp_args(model_path, input_wav_path, output_prefix)
         cmd.extend(args)
     else:
-        # copy the audio file to audios folder -- if they are not already there        
+        docker_image = os.getenv("WHISPER_CPP_DOCKER_IMAGE", DEFAULT_DOCKER_IMAGE)
+        # copy the audio file to audios folder -- if they are not already there
         audio_filename = os.path.basename(input_wav_path)
         audio_dest_path = os.path.join("audios", audio_filename)
-        
+
+        args = whisper_cpp_args(model_path, audio_dest_path, output_prefix)
         if audio_dest_path != input_wav_path:
-            import shutil
             shutil.copy2(input_wav_path, audio_dest_path)
             logger.info(f"Copied audio file to {audio_dest_path}")
-        
+
         cmd += [
             "docker",
             "run",
@@ -150,8 +154,8 @@ def transcribe(
             f"{os.getcwd()}/audios:/audios",
             "-v",
             f"{os.getcwd()}/outputs:/outputs",
-            "ghcr.io/ggml-org/whisper.cpp:main",
-            f'"{' '.join(args)}"',
+            docker_image,
+            f'"{" ".join(args)}"',
         ]
 
     try:
