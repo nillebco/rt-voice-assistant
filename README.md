@@ -86,17 +86,20 @@ The `sample-web-client` folder contains a web application (in React) showing how
 ## Pre-requirements
 
 You must have access to an LLM accessible through a OpenAI like API.
-And you must download a few files before proceeding.
+You must download a few files before proceeding.
 
 You have installed the necessary audio libraries at the OS level.
 eg.
 
-- portaudio portaudio-devel on redhat-like distributions
-- libportaudio2, portaudio19-dev, libportaudiocpp0, libasound2, libasound2-plugins, alsa-utils on ubuntu-like distributions
+- redhat-like distributions: portaudio portaudio-devel ffmpeg ffmpeg-devel
+- ubuntu-like distributions: libportaudio2, portaudio19-dev, libportaudiocpp0, libasound2, libasound2-plugins, alsa-utils ffmpeg
+- macos: ffmpeg ollama
+
+In the following sections we provide sample setup scripts for a few target architectures/distributions.
 
 ### on Ubuntu or Debian -- using Docker and llama_cpp
 
-(The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
+(The llama.cpp server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
 
 ```sh
 ./cli download llama_cpp
@@ -118,8 +121,6 @@ curl http://localhost:11434/v1/chat/completions \
 
 ### on Ubuntu or Debian -- using Docker and ollama
 
-(The server image is available also for a few other GPUs - check https://github.com/ggml-org/llama.cpp/blob/b6262/docs/docker.md)
-
 ```sh
 ./cli download ollama
 ./cli ollama-up
@@ -139,12 +140,23 @@ curl http://localhost:11434/v1/chat/completions \
 
 ### on MacOS using Homebrew (https://brew.sh/) and ollama
 
-These steps optimize whisper.cpp for the Apple Neural Engine (optimized on Mx processors)
-
 ```sh
+# LLM setup
 brew install ffmpeg ollama
 ./cli download ollama
 ollama serve
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-local" \
+  -d '{
+    "model": "qwen2.5:14b",
+    "messages": [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Write a haiku about Debian Linux."}
+    ],
+    "max_tokens": 100,
+    "temperature": 0.7
+  }'
 
 # STT - compile whisper.cpp with native acceleration
 cd $HOME
