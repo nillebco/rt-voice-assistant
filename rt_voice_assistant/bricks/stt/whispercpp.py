@@ -1,11 +1,15 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
 import uuid
 
 logger = logging.getLogger("rt_py.bricks.stt_whisper_cpp")
 logger.setLevel(logging.DEBUG)
+
+DEFAULT_DOCKER_IMAGE = "ghcr.io/ggml-org/whisper.cpp:main"
+DEFAULT_MODEL = "small"  # Default model to use when whisper-1 is specified
 
 
 def safe_decode(data: bytes) -> str:
@@ -94,20 +98,47 @@ def whisper_cpp_args(model_path, input_wav_path, output_prefix, language=None):
     return cmd
 
 
+def detect_paths(model: str = None, language: str = None):
+    language = language or "en"
+
+    home = os.path.expanduser("~")
+    whisper_cpp_dir = os.getenv(
+        "WHISPER_CPP_DIR", f"{home}/whisper.cpp"
+    )  # as suggested for macOS in our README
+
+    whisper_binary = f"{whisper_cpp_dir}/build/bin/whisper-cli"
+    if not os.path.exists(whisper_binary):
+        logger.warning(f"Whisper binary does not exist: {whisper_binary} -- will be using docker!")
+        whisper_binary = None
+
+    available_models_directories = [
+        os.getenv("WHISPER_MODELS_DIR", "./models"),
+        f"{whisper_cpp_dir}/models",
+    ]
+    available_models = [model] if model else ["small", "tiny", "medium", "base"]
+
+    valid_models_dir = None
+    for models_dir in available_models_directories:
+        if os.path.exists(models_dir) and os.path.isdir(models_dir):
+            for model in available_models:
+                if os.path.exists(f"{models_dir}/ggml-{model}.{language}.bin"):
+                    valid_models_dir = models_dir
+                    break
+
+    if not valid_models_dir:
+        raise ValueError(
+            f"No valid models directory found in {available_models_directories}"
+        )
+
+    model_path = f"{valid_models_dir}/ggml-{model}.{language}.bin"
+    return whisper_binary, model_path
+
+
 def transcribe(
     input_wav_path: str,
     model: str = None,
     language: str = None,
-    whisper_cpp_dir: str = None,
 ):
-    WHISPER_CPP_DIR = whisper_cpp_dir or os.getenv("WHISPER_CPP_DIR", "./whisper.cpp")
-
-    WHISPER_MODEL_FMT = f"{WHISPER_CPP_DIR}/models/ggml-" "{model}.{language}.bin"
-    WHISPER_BINARY = os.getenv(
-        "WHISPER_BINARY", f"{WHISPER_CPP_DIR}/build/bin/whisper-cli"
-    )
-    DEFAULT_MODEL = "small"  # Default model to use when whisper-1 is specified
-
     if not os.path.isdir("outputs"):
         os.mkdir("outputs")
 
@@ -117,28 +148,29 @@ def transcribe(
     output_prefix = f"outputs/out-{uuid.uuid4()}"
 
     actual_model = DEFAULT_MODEL if model == "whisper-1" or not model else model
-    model_path = WHISPER_MODEL_FMT.format(model=actual_model, language=language)
-    if not os.path.exists(model_path):
-        raise ValueError(
-            f"Model '{model}' for language '{language}' does not exist. ({model_path})"
-            "Please check the model name and language."
-        )
+    whisper_binary, model_path = detect_paths(actual_model, language)
 
     cmd = []
-    args = whisper_cpp_args(model_path, input_wav_path, output_prefix)
-    if os.path.exists(WHISPER_BINARY):
-        cmd.append(WHISPER_BINARY)
+    if whisper_binary:
+        cmd.append(whisper_binary)
+        args = whisper_cpp_args(model_path, input_wav_path, output_prefix)
         cmd.extend(args)
     else:
-        # copy the audio file to audios folder -- if they are not already there        
+        docker_image = os.getenv("WHISPER_CPP_DOCKER_IMAGE", DEFAULT_DOCKER_IMAGE)
+        # copy the audio file to audios folder -- if they are not already there
         audio_filename = os.path.basename(input_wav_path)
         audio_dest_path = os.path.join("audios", audio_filename)
-        
+
+        model_path = f"/models/ggml-{model}.{language}.bin"
+        args = whisper_cpp_args(model_path, f"/{audio_dest_path}", f"/{output_prefix}")
         if audio_dest_path != input_wav_path:
-            import shutil
             shutil.copy2(input_wav_path, audio_dest_path)
             logger.info(f"Copied audio file to {audio_dest_path}")
-        
+
+        use_elevated_docker = os.getenv("WHISPER_CPP_USE_ELEVATED_DOCKER", "false")
+        if use_elevated_docker == "true":
+            cmd += ["sudo"]
+
         cmd += [
             "docker",
             "run",
@@ -150,9 +182,10 @@ def transcribe(
             f"{os.getcwd()}/audios:/audios",
             "-v",
             f"{os.getcwd()}/outputs:/outputs",
-            "whisper.cpp:main",
-            f'"{' '.join(args)}"',
+            docker_image,
+            f'"whisper-cli {" ".join(args)}"',
         ]
+        logger.error(f"Docker command: {' '.join(cmd)}")
 
     try:
         process_handle = execute_whisper(cmd)
@@ -163,8 +196,8 @@ def transcribe(
         stdout_text = safe_get_text(process_handle.stdout)
         stderr_text = safe_get_text(process_handle.stderr)
 
-        logger.info(f"Whisper stdout: {stdout_text}")
-        logger.info(f"Whisper stderr: {stderr_text}")
+        logger.error(f"Whisper stdout: {stdout_text}")
+        logger.error(f"Whisper stderr: {stderr_text}")
 
     # Read the JSON file with explicit encoding
     json_file_path = f"{output_prefix}.json"
