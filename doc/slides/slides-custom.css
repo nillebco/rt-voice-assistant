@@ -105,3 +105,55 @@
 .pycon.reveal .excalidraw-svg img {
     max-width: 800px !important;
 }
+
+/* Side-by-side layout for images and text */
+.reveal .side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+}
+
+.reveal .side-by-side img {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+.reveal .side-by-side .text-content {
+    padding: 0 1rem;
+}
+
+/* For smaller screens, stack vertically */
+@media (max-width: 768px) {
+    .reveal .side-by-side {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Blockquote styling */
+.reveal blockquote {
+    border-left: 4px solid #e879f9;
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+    font-style: italic;
+    background: rgba(232, 121, 249, 0.1);
+    padding: 1rem 1.5rem;
+    border-radius: 0 8px 8px 0;
+}
+
+.reveal blockquote p {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1em;
+    line-height: 1.4;
+}
+
+.reveal blockquote cite {
+    display: block;
+    font-size: 0.9em;
+    color: #93c5fd;
+    font-style: normal;
+    text-align: right;
+    margin-top: 0.5rem;
+}

@@ -7,7 +7,7 @@ load_dotenv() {
     fi
 }
 
-download_common() {
+download_tts_models() {
   mkdir -p models
   if [ ! -f models/kokoro-v1.0.onnx ]; then
       echo "Downloading kokoro model (STT)"
@@ -17,6 +17,9 @@ download_common() {
       echo "Downloading voices for kokoro (TTS)"
       curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" -o models/voices-v1.0.bin
   fi
+}
+
+download_stt_models() {
   # whisper ggmls - https://huggingface.co/ggerganov/whisper.cpp/tree/main
   if [ ! -f models/ggml-tiny.en.bin ]; then
     echo "Downloading whisper tiny model (STT)"
@@ -40,6 +43,11 @@ download_common() {
     curl https://raw.githubusercontent.com/ggml-org/whisper.cpp/refs/heads/master/samples/jfk.wav -o audios/jfk.wav
   fi
   echo "All done! ✅"
+}
+
+download_common() {
+  download_tts_models
+  download_stt_models
 }
 
 download_llama_cpp() {
@@ -140,10 +148,6 @@ llama_cpp_down() {
     docker stop llm-${model}
 }
 
-ollama_up() {
-    ollama serve
-}
-
 # Check if subcommand is provided
 if [ $# -eq 0 ]; then
     echo "Error: No subcommand provided"
@@ -228,8 +232,16 @@ case "$subcommand" in
         if [[ "$@" == "" ]]; then
             echo "Error: No download type provided"
             echo "Usage: $0 download <type>"
-            echo "Available types: common, llama-cpp, ollama"
+            echo "Available types: common (includes stt and tts), llama-cpp, ollama, tts, stt"
             exit 1
+        fi
+        if [[ "$@" == *"tts"* ]]; then
+            echo "Downloading tts models"
+            download_tts_models
+        fi
+        if [[ "$@" == *"stt"* ]]; then
+            echo "Downloading stt models"
+            download_stt_models
         fi
         if [[ "$@" == *"common"* ]]; then
             echo "Downloading common models (STT and TTS)"
@@ -247,9 +259,6 @@ case "$subcommand" in
         ;;
     "llama_cpp-down")
         llama_cpp_down $1
-        ;;
-    "ollama-up")
-        ollama_up
         ;;
     *)
         echo "Error: Unknown subcommand '$subcommand'"
