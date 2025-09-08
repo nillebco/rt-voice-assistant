@@ -10,12 +10,21 @@
 
 ## Where are we going today - and why?
 
-> LLMs are a new kind of computer, and you program them in English
->         			- Andrej Karpathy
+<div class="side-by-side">
+  <div class="text-content">
+    <blockquote>
+      <p>LLMs are a new kind of computer, and you program them in English</p>
+      <cite>— Andrej Karpathy</cite>
+    </blockquote>
+  </div>
+  <img src="https://downloads.intercomcdn.com/i/o/dgkjq2bp/1658109889/e9f3194e5f56fc89c198af42cc0c/AD_4nXfsjvyTirgyHkaKM7BjhFu6DukY2ioF4IkXufsh106dK1utoB8vOQqOOs93TR0AGU0vQeMNwYgm53Am_qzM0dhwld9BKSgU1wzhuLcZtD84o2LZC-z4JtH1evEWx2S6b4qTufiY?expires=1757311200&signature=04a48e756d28dd43717893999314c53c8911ce0ed48acf5301a09356ca84166d&req=dSYiHsh%2BlIlXUPMW1HO4zQnlSUxWjxRXbmXRHpNYmWNzJ%2FmKpQWcsvgJdbYI%0Ax7BUgS739TaZXugOtFs%3D%0A" alt="it's cool to speak to somebody who knows everything"/>
+</div>
 
+<!--
 LLMs are good at what software isn't and viceversa. Think of them as a set of stored procedures activated by the sentences you type.
 
 <span class="highlight">*What if the LLMs were just a new Human Machine Interface?*</span>
+-->
 
 ---
 
@@ -63,6 +72,8 @@ Just fork my repository and try them! :)
 ## Show me the code!
 
 https://github.com/<span class="highlight">nillebco</span>/rt-voice-assistant
+
+<img src="repo-qrcode.png" alt="the qr code for the gt repository">
 
 ---
 
