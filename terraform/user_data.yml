@@ -36,7 +36,7 @@ runcmd:
   - systemctl restart ssh
   - curl -fsSL https://tailscale.com/install.sh | sh
   - loginctl enable-linger 'devops'
-  - sudo tailscale set --operator=devops
+  - tailscale set --operator=devops
   - su - devops -c "tailscale up --authkey=${TAILSCALE_AUTH_KEY}"
   - su - devops -c "tailscale cert ${SERVICE_NAME}.${TAILSCALE_DOMAIN}"
   - su - devops -c "echo 'alias docker=podman' >> /home/devops/.bashrc"
