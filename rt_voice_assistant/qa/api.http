@@ -7,6 +7,26 @@ POST https://tts.localhost/api/v1/tts
 
 ###
 
-POST https://tts.localhost/api/v1/audio/transcriptions
+POST https://tts.localhost/api/v1/audio/transcriptions?language=en&model=base
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="voice_20250824-114856.wav"
+Content-Type: audio/wav
+
+< ./sample-en.wav
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
+
+POST https://tts.localhost/api/v1/audio/transcriptions?language=fr&model=small
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="voice_20250824-114856.wav"
+Content-Type: audio/wav
+
+< ./sample-fr.wav
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###

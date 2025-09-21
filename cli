@@ -37,12 +37,40 @@ download_stt_models() {
     echo "Downloading whisper medium model (STT)"
     curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.en.bin -o models/ggml-medium.en.bin
   fi
+  if [ ! -f models/ggml-tiny.bin ]; then
+    echo "Downloading whisper tiny model (STT)"
+    curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin -o models/ggml-tiny.bin
+  fi
+  if [ ! -f models/ggml-base.bin ]; then
+    echo "Downloading whisper base model (STT)"
+    curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin -o models/ggml-base.bin
+  fi
+  if [ ! -f models/ggml-small.bin ]; then
+    echo "Downloading whisper small model (STT)"
+    curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin -o models/ggml-small.bin
+  fi
+  if [ ! -f models/ggml-medium.bin ]; then
+    echo "Downloading whisper medium model (STT)"
+    curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin -o models/ggml-medium.bin
+  fi
   mkdir -p audios
   if [ ! -f audios/jfk.wav ]; then
     echo "Downloading sample audio file jfk.wav (STT)"
     curl https://raw.githubusercontent.com/ggml-org/whisper.cpp/refs/heads/master/samples/jfk.wav -o audios/jfk.wav
   fi
   echo "All done! ✅"
+}
+
+optimize_stt_models_for_macos() {
+    load_dotenv
+    uv run $WHISPER_CPP_DIR/models/generate-coreml-model.sh tiny.en
+    uv run $WHISPER_CPP_DIR/models/generate-coreml-model.sh base.en
+    uv run $WHISPER_CPP_DIR/models/generate-coreml-model.sh small.en
+    uv run $WHISPER_CPP_DIR/models/generate-coreml-model.sh medium.en
+    uv run $WHISPER_CPP_DIR/models/generate-coreml-model.sh tiny
+    uv run $WHISPER_CPP_DIR/models/generate-coreml-model.sh base
+    uv run $WHISPER_CPP_DIR/models/generate-coreml-model.sh small
+    uv run $WHISPER_CPP_DIR/models/generate-coreml-model.sh medium
 }
 
 download_common() {
@@ -259,6 +287,9 @@ case "$subcommand" in
         ;;
     "llama_cpp-down")
         llama_cpp_down $1
+        ;;
+    "optimize_stt_models_for_macos")
+        optimize_stt_models_for_macos
         ;;
     *)
         echo "Error: Unknown subcommand '$subcommand'"

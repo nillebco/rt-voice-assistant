@@ -7,6 +7,9 @@ import uuid
 
 logger = logging.getLogger("rt_py.bricks.stt_whisper_cpp")
 logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 DEFAULT_DOCKER_IMAGE = "ghcr.io/ggml-org/whisper.cpp:main"
 DEFAULT_MODEL = "small"  # Default model to use when whisper-1 is specified
@@ -117,20 +120,24 @@ def detect_paths(model: str = None, language: str = None):
     ]
     available_models = [model] if model else ["small", "tiny", "medium", "base"]
 
-    valid_models_dir = None
+    valid_models_dir, model_path = None, None
     for models_dir in available_models_directories:
         if os.path.exists(models_dir) and os.path.isdir(models_dir):
             for model in available_models:
-                if os.path.exists(f"{models_dir}/ggml-{model}.{language}.bin"):
-                    valid_models_dir = models_dir
-                    break
+                model_paths = [
+                    f"{models_dir}/ggml-{model}.{language}.bin",
+                    f"{models_dir}/ggml-{model}.bin",
+                ]
+                for model_path in model_paths:
+                    if os.path.exists(model_path):
+                        valid_models_dir = models_dir
+                        break
 
     if not valid_models_dir:
         raise ValueError(
             f"No valid models directory found in {available_models_directories}"
         )
 
-    model_path = f"{valid_models_dir}/ggml-{model}.{language}.bin"
     return whisper_binary, model_path
 
 
@@ -153,7 +160,7 @@ def transcribe(
     cmd = []
     if whisper_binary:
         cmd.append(whisper_binary)
-        args = whisper_cpp_args(model_path, input_wav_path, output_prefix)
+        args = whisper_cpp_args(model_path, input_wav_path, output_prefix, language)
         cmd.extend(args)
     else:
         docker_image = os.getenv("WHISPER_CPP_DOCKER_IMAGE", DEFAULT_DOCKER_IMAGE)
@@ -162,7 +169,9 @@ def transcribe(
         audio_dest_path = os.path.join("audios", audio_filename)
 
         model_path = f"/models/ggml-{model}.{language}.bin"
-        args = whisper_cpp_args(model_path, f"/{audio_dest_path}", f"/{output_prefix}")
+        args = whisper_cpp_args(
+            model_path, f"/{audio_dest_path}", f"/{output_prefix}", language
+        )
         if audio_dest_path != input_wav_path:
             shutil.copy2(input_wav_path, audio_dest_path)
             logger.info(f"Copied audio file to {audio_dest_path}")
@@ -196,8 +205,8 @@ def transcribe(
         stdout_text = safe_get_text(process_handle.stdout)
         stderr_text = safe_get_text(process_handle.stderr)
 
-        logger.error(f"Whisper stdout: {stdout_text}")
-        logger.error(f"Whisper stderr: {stderr_text}")
+        logger.info(f"Whisper stdout: {stdout_text}")
+        logger.info(f"Whisper stderr: {stderr_text}")
 
     # Read the JSON file with explicit encoding
     json_file_path = f"{output_prefix}.json"

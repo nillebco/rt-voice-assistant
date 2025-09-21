@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
     File,
-    Form,
+    Query,
     HTTPException,
     UploadFile,
     WebSocket,
@@ -156,8 +156,8 @@ async def text_to_speech(request: TTSRequest):
 @app.post("/audio/transcriptions")
 async def transcribe_audio(
     file: UploadFile = File(...),
-    model: str = Form("base"),
-    language: str = Form("en"),
+    model: str = Query("base"),
+    language: str = Query("en"),
 ):
     input_wav_path, original_temp_file_path = await _prepare_wav_input(file)
 
