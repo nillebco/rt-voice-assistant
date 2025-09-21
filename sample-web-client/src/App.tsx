@@ -11,6 +11,7 @@ interface TranscriptionItem {
 
 const VoiceActivityDetection = () => {
   const [transcriptionHistory, setTranscriptionHistory] = useState<TranscriptionItem[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   
   const {
     transcribeAudio,
@@ -19,6 +20,7 @@ const VoiceActivityDetection = () => {
     clearError
   } = useTranscription({
     model: 'base',
+    language: selectedLanguage,
     onTranscriptionStart: () => console.log('Starting transcription...'),
     onTranscriptionComplete: (result) => {
       console.log('Transcription complete:', result);
@@ -109,6 +111,18 @@ const VoiceActivityDetection = () => {
       </div>
       
       <div className="controls">
+        <div className="language-selector">
+          <label htmlFor="language-select">Language:</label>
+          <select 
+            id="language-select"
+            value={selectedLanguage} 
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="language-combobox"
+          >
+            <option value="en">🇺🇸 English</option>
+            <option value="fr">🇫🇷 French</option>
+          </select>
+        </div>
         <button onClick={vad.listening ? vad.pause : vad.start}>
           {vad.listening ? 'Stop Recording' : 'Start Recording'}
         </button>
