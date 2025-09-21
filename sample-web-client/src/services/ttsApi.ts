@@ -18,12 +18,13 @@ export class TTSApiClient {
    */
   async transcribeAudio(
     audioFile: File | Blob,
-    model: string = 'base'
+    model: string = 'base',
+    language: string = 'en'
   ): Promise<TranscriptionResponse> {
     const formData = new FormData();
     formData.append('file', audioFile);
 
-    const url = `${this.baseUrl}/v1/audio/transcriptions?model=${model}`;
+    const url = `${this.baseUrl}/api/v1/audio/transcriptions?model=${model}&language=${language}`;
 
     try {
       const response = await fetch(url, {
@@ -55,11 +56,12 @@ export class TTSApiClient {
   async transcribeAudioBlob(
     audioBlob: Blob,
     filename: string = 'recording.webm',
-    model: string = 'base'
+    model: string = 'base',
+    language: string = 'en'
   ): Promise<TranscriptionResponse> {
     // Create a File object from the blob with a proper filename
     const audioFile = new File([audioBlob], filename, { type: audioBlob.type });
-    return this.transcribeAudio(audioFile, model);
+    return this.transcribeAudio(audioFile, model, language);
   }
 
   /**
@@ -74,7 +76,8 @@ export class TTSApiClient {
     base64Data: string,
     mimeType: string = 'audio/webm',
     filename: string = 'recording.webm',
-    model: string = 'base'
+    model: string = 'base',
+    language: string = 'en'
   ): Promise<TranscriptionResponse> {
     // Remove data URL prefix if present
     const base64 = base64Data.replace(/^data:[^;]+;base64,/, '');
@@ -90,9 +93,14 @@ export class TTSApiClient {
     const byteArray = new Uint8Array(byteNumbers);
     const audioBlob = new Blob([byteArray], { type: mimeType });
     
-    return this.transcribeAudioBlob(audioBlob, filename, model);
+    return this.transcribeAudioBlob(audioBlob, filename, model, language);
   }
 }
 
 // Export a default instance
 export const ttsApiClient = new TTSApiClient();
+
+// For development: Force recreation of the instance when module reloads
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}

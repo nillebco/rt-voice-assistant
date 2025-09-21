@@ -34,7 +34,7 @@ const VoiceActivityDetection = () => {
   });
 
   const vad = useMicVAD({
-    onSpeechEnd: async (audio) => {
+    onSpeechEnd: async (audio: Float32Array) => {
       console.log("User stopped talking, audio length:", audio.length);
       
       try {

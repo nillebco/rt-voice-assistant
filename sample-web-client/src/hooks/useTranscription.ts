@@ -3,6 +3,7 @@ import { ttsApiClient, type TranscriptionResponse } from '../services/ttsApi';
 
 export interface UseTranscriptionOptions {
   model?: string;
+  language?: string;
   onTranscriptionStart?: () => void;
   onTranscriptionComplete?: (result: TranscriptionResponse) => void;
   onTranscriptionError?: (error: Error) => void;
@@ -24,7 +25,8 @@ export const useTranscription = (options: UseTranscriptionOptions = {}) => {
       const result = await ttsApiClient.transcribeAudioBlob(
         audioBlob,
         'recording.webm',
-        options.model || 'base'
+        options.model || 'base',
+        options.language || 'en'
       );
 
       setTranscription(result.text);
