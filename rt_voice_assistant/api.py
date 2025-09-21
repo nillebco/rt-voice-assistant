@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import uuid
 from contextlib import asynccontextmanager
+from datetime import datetime
 from tempfile import NamedTemporaryFile
 
 import soundfile as sf
@@ -12,8 +13,8 @@ from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
     File,
-    Query,
     HTTPException,
+    Query,
     UploadFile,
     WebSocket,
     WebSocketDisconnect,
@@ -23,11 +24,19 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from starlette.websockets import WebSocketState
 
+from .bricks.llm import clean_thinking, get_client, trim_to_budget
 from .bricks.stt.whispercpp import transcribe
 from .bricks.tts import get_tts_engine
 from .bricks.tts import on_startup as on_startup_tts
 
 load_dotenv()
+
+HISTORY = []
+URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
+SYSTEM_PROMPT = os.getenv(
+    "SYSTEM_PROMPT",
+    f"You are a concise, helpful assistant. Today it's {datetime.now().strftime('%Y-%m-%d')}.",
+)
 
 app = FastAPI(
     title="RealTime Voice Assistant API",
@@ -168,6 +177,42 @@ async def transcribe_audio(
             input_wav_path=input_wav_path,
         ),
     }
+
+@app.post("/audio/completions")
+async def completions(
+    file: UploadFile = File(...),
+    stt_model: str = Query("base"),
+    model: str = Query("openai/gpt-4o"),
+    language: str = Query("en"),
+    voice: str = Query("af_heart"),
+):
+    input_wav_path, original_temp_file_path = await _prepare_wav_input(file)
+
+    transcription = transcribe(
+            model=stt_model,
+            language=language,
+            input_wav_path=input_wav_path,
+        )
+
+    HISTORY.append({"role": "user", "content": transcription})
+    messages = trim_to_budget(HISTORY, SYSTEM_PROMPT, budget=6000)
+    client = get_client(url=URL)
+    response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+        )
+    text = response.choices[0].message.content
+    audible_text = clean_thinking(text)
+    tts = get_tts_engine()
+    samples, sample_rate = tts.create(audible_text, voice=voice, lang=language)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+        sf.write(temp_file.name, samples, sample_rate)
+        temp_file_path = temp_file.name
+
+    return FileResponse(
+        temp_file_path,
+        samples, media_type="audio/wav", filename="completions_output.wav"
+    )
 
 
 @app.websocket("/wss/audio/transcriptions")
