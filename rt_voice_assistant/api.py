@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from tempfile import NamedTemporaryFile
 
 import soundfile as sf
+from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
     File,
@@ -26,10 +27,13 @@ from .bricks.stt.whispercpp import transcribe
 from .bricks.tts import get_tts_engine
 from .bricks.tts import on_startup as on_startup_tts
 
+load_dotenv()
+
 app = FastAPI(
     title="RealTime Voice Assistant API",
     description="RealTime Voice Assistant API",
     root_path="/api/v1",
+    docs_url="/docs",
 )
 
 app.add_middleware(
@@ -149,7 +153,7 @@ async def text_to_speech(request: TTSRequest):
         raise HTTPException(status_code=500, detail=f"TTS generation failed: {str(e)}")
 
 
-@app.post("/v1/audio/transcriptions")
+@app.post("/audio/transcriptions")
 async def transcribe_audio(
     file: UploadFile = File(...),
     model: str = Form("base"),
@@ -166,7 +170,7 @@ async def transcribe_audio(
     }
 
 
-@app.websocket("/audio")
+@app.websocket("/wss/audio/transcriptions")
 async def websocket_audio(websocket: WebSocket):
     await websocket.accept()
 
@@ -205,8 +209,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Port to run the server on (default: 8000)",
+        default=5555,
+        help="Port to run the server on (default: 5555)",
     )
     args = parser.parse_args()
     uvicorn.run(app, host="0.0.0.0", port=args.port)

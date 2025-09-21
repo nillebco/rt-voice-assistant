@@ -28,28 +28,26 @@ def safe_get_text(stream: bytes) -> str:
     return text
 
 
-def read_transcription(json_file_path: str) -> str:
+def safe_json_read(json_file_path: str) -> str:
     try:
-        with open(json_file_path, "r", encoding="utf-8") as out_file:
-            file_content = out_file.read()
-            logger.info(f"JSON file content length: {len(file_content)}")
-            transcription_data = json.loads(file_content)
-            transcription = transcription_data["transcription"][0]["text"]
-    except UnicodeDecodeError as e:
-        logger.error(f"Unicode decode error reading JSON file: {e}")
-        # Try to read as bytes and decode with error handling
-        with open(json_file_path, "rb") as out_file:
-            file_content = out_file.read()
-            logger.info(f"JSON file bytes length: {len(file_content)}")
-            # Try to decode with error handling
-            try:
-                decoded_content = file_content.decode("utf-8", errors="replace")
-                transcription_data = json.loads(decoded_content)
-                transcription = transcription_data["transcription"][0]["text"]
-                logger.warning("Successfully decoded JSON with replacement characters")
-            except Exception as decode_e:
-                logger.error(f"Failed to decode JSON even with replacement: {decode_e}")
-                raise
+        data = json.load(open(json_file_path, "r", encoding="utf-8", errors="replace"))
+    except (FileNotFoundError, UnicodeDecodeError):
+        logger.exception(f"Error reading JSON file: {json_file_path}")
+        raise
+    return data
+
+
+def extract_transcription(transcription_data: dict) -> str:
+    try:
+        transcription = transcription_data["transcription"][0]["text"]
+    except (KeyError, IndexError):
+        transcription = None
+    return transcription
+
+
+def read_transcription(json_file_path: str) -> str:
+    transcription_data = safe_json_read(json_file_path)
+    transcription = extract_transcription(transcription_data)
     return transcription
 
 
@@ -108,7 +106,9 @@ def detect_paths(model: str = None, language: str = None):
 
     whisper_binary = f"{whisper_cpp_dir}/build/bin/whisper-cli"
     if not os.path.exists(whisper_binary):
-        logger.warning(f"Whisper binary does not exist: {whisper_binary} -- will be using docker!")
+        logger.warning(
+            f"Whisper binary does not exist: {whisper_binary} -- will be using docker!"
+        )
         whisper_binary = None
 
     available_models_directories = [

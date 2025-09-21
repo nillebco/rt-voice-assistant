@@ -1,0 +1,12 @@
+POST https://tts.localhost/api/v1/tts
+
+{
+    "text": "Hello, how are you?",
+    "voice": "af_heart"
+}
+
+###
+
+POST https://tts.localhost/api/v1/audio/transcriptions
+
+###
