@@ -339,3 +339,5 @@ The `./cli download` allows you to download any of
 - Detect the spoken language
 - Reduce the pauses in the input
 - Finish the web API use case
+- API: Use a persistent history by user/chat (rather than a global/ephemeral one)
+- Make the language optional, don't default to english
