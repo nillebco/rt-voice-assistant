@@ -291,6 +291,9 @@ case "$subcommand" in
     "optimize_stt_models_for_macos")
         optimize_stt_models_for_macos
         ;;
+    "serve")
+        uv run -m uvicorn rt_voice_assistant.api:app --reload --port 5555
+        ;;
     *)
         echo "Error: Unknown subcommand '$subcommand'"
         show_usage

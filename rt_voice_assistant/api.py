@@ -37,6 +37,8 @@ SYSTEM_PROMPT = os.getenv(
     "SYSTEM_PROMPT",
     f"You are a concise, helpful assistant. Today it's {datetime.now().strftime('%Y-%m-%d')}.",
 )
+MODEL = os.getenv("MODEL", "openai/gpt-4o")
+VOICE = os.getenv("VOICE", "af_heart")
 
 app = FastAPI(
     title="RealTime Voice Assistant API",
@@ -178,40 +180,43 @@ async def transcribe_audio(
         ),
     }
 
+
 @app.post("/audio/completions")
 async def completions(
     file: UploadFile = File(...),
     stt_model: str = Query("base"),
-    model: str = Query("openai/gpt-4o"),
+    model: str = Query(MODEL),
     language: str = Query("en"),
-    voice: str = Query("af_heart"),
+    voice: str = Query(VOICE),
 ):
     input_wav_path, original_temp_file_path = await _prepare_wav_input(file)
 
     transcription = transcribe(
-            model=stt_model,
-            language=language,
-            input_wav_path=input_wav_path,
-        )
+        model=stt_model,
+        language=language,
+        input_wav_path=input_wav_path,
+    )
 
     HISTORY.append({"role": "user", "content": transcription})
     messages = trim_to_budget(HISTORY, SYSTEM_PROMPT, budget=6000)
     client = get_client(url=URL)
     response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-        )
+        model=model,
+        messages=messages,
+    )
     text = response.choices[0].message.content
     audible_text = clean_thinking(text)
+    tts_language = {"en": "en-us", "fr": "fr-fr"}.get(language, "en-us")
     tts = get_tts_engine()
-    samples, sample_rate = tts.create(audible_text, voice=voice, lang=language)
+    samples, sample_rate = tts.create(audible_text, voice=voice, lang=tts_language)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
         sf.write(temp_file.name, samples, sample_rate)
         temp_file_path = temp_file.name
 
     return FileResponse(
         temp_file_path,
-        samples, media_type="audio/wav", filename="completions_output.wav"
+        media_type="audio/wav",
+        filename="completions_output.wav",
     )
 
 

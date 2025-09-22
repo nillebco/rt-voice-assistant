@@ -30,3 +30,15 @@ Content-Type: audio/wav
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###
+
+POST https://tts.localhost/api/v1/audio/completions?language=en&stt_model=small
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="voice_20250824-114856.wav"
+Content-Type: audio/wav
+
+< ./sample-en.wav
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
