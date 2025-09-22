@@ -294,6 +294,11 @@ case "$subcommand" in
     "serve")
         uv run -m uvicorn rt_voice_assistant.api:app --reload --port 5555
         ;;
+    "serve-client")
+        pushd sample-web-client
+        npm run preview
+        popd
+        ;;
     *)
         echo "Error: Unknown subcommand '$subcommand'"
         show_usage
