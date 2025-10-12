@@ -17,7 +17,7 @@
       <cite>— Andrej Karpathy</cite>
     </blockquote>
   </div>
-  <img src="https://downloads.intercomcdn.com/i/o/dgkjq2bp/1658109889/e9f3194e5f56fc89c198af42cc0c/AD_4nXfsjvyTirgyHkaKM7BjhFu6DukY2ioF4IkXufsh106dK1utoB8vOQqOOs93TR0AGU0vQeMNwYgm53Am_qzM0dhwld9BKSgU1wzhuLcZtD84o2LZC-z4JtH1evEWx2S6b4qTufiY?expires=1757311200&signature=04a48e756d28dd43717893999314c53c8911ce0ed48acf5301a09356ca84166d&req=dSYiHsh%2BlIlXUPMW1HO4zQnlSUxWjxRXbmXRHpNYmWNzJ%2FmKpQWcsvgJdbYI%0Ax7BUgS739TaZXugOtFs%3D%0A" alt="it's cool to speak to somebody who knows everything"/>
+  <img src="https://downloads.intercomcdn.com/i/o/dgkjq2bp/1658109889/e9f3194e5f56fc89c198af42cc0c/AD_4nXfsjvyTirgyHkaKM7BjhFu6DukY2ioF4IkXufsh106dK1utoB8vOQqOOs93TR0AGU0vQeMNwYgm53Am_qzM0dhwld9BKSgU1wzhuLcZtD84o2LZC-z4JtH1evEWx2S6b4qTufiY?expires=1757311200&signature=04a48e756d28dd43717893999314c53c8911ce0ed48acf5301a09356ca84166d&req=dSYiHsh%2BlIlXUPMW1HO4zQnlSUxWjxRXbmXRHpNYmWNzJ%2FmKpQWcsvgJdbYI%0Ax7BUgS739TaZXugOtFs%3D%0A" alt="it's cool to speak with somebody who knows everything"/>
 </div>
 
 Note:
