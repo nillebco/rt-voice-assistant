@@ -89,7 +89,8 @@ def _get_prob(chunk: np.ndarray, sampling_rate: int = SAMPLERATE) -> float:
     if not torch.is_tensor(chunk):
         try:
             chunk = torch.Tensor(chunk)
-        except:
+        except Exception:
+            logger.exception("Error casting audio to tensor")
             raise TypeError("Audio cannot be casted to tensor. Cast it manually")
 
     return vad_silero(chunk, sampling_rate).item()

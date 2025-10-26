@@ -299,6 +299,11 @@ case "$subcommand" in
         npm run preview
         popd
         ;;
+    lint)
+        uvx ruff format .
+        uvx ruff check --fix .
+        uvx ty check .
+        ;;
     *)
         echo "Error: Unknown subcommand '$subcommand'"
         show_usage
