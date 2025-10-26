@@ -18,7 +18,8 @@ const Assistant = () => {
     processAudioCompletion,
     isProcessingAudioCompletion,
     error,
-    clearError
+    clearError,
+    clearHistory: clearAssistantHistory
   } = useAssistant({
     sttModel: 'base',
     language: selectedLanguage,
@@ -64,6 +65,9 @@ const Assistant = () => {
       }
     });
     setTranscriptionHistory([]);
+    clearAssistantHistory().catch(err => {
+      console.error('Failed to clear assistant history:', err);
+    });
   };
 
   const playAudio = (audioUrl: string) => {

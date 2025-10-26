@@ -54,6 +54,10 @@ export const useAssistant = (options: UseAssistantOptions = {}) => {
     setError(null);
   }, []);
 
+  const clearHistory = useCallback(async () => {
+    await assistantApiClient.clearHistory();
+  }, []);
+
   return {
     processAudioCompletion,
     isProcessingAudioCompletion,
@@ -61,5 +65,6 @@ export const useAssistant = (options: UseAssistantOptions = {}) => {
     error,
     clearAudioResponse,
     clearError,
+    clearHistory,
   };
 };

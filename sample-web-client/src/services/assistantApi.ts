@@ -64,8 +64,17 @@ export class AssistantApiClient {
       throw error;
     }
   }
+
+  async clearHistory(): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/v1/assistant/clear-history`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  }
 }
-  
+
 // Export a default instance
 export const assistantApiClient = new AssistantApiClient();
 

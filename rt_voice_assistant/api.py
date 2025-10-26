@@ -228,6 +228,12 @@ async def completions(
     )
 
 
+@app.post("/assistant/clear-history")
+async def clear_history():
+    HISTORY.clear()
+    return {"message": "History cleared"}
+
+
 @app.websocket("/wss/audio/transcriptions")
 async def websocket_audio(websocket: WebSocket):
     await websocket.accept()
