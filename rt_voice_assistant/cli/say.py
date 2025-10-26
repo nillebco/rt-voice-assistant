@@ -15,8 +15,8 @@ import sounddevice as sd
 
 from ..bricks.tts import get_tts_engine
 
-VOICE=os.getenv("VOICE", "af_heart")
-LANGUAGE=os.getenv("LANGUAGE", "en-us")
+VOICE = os.getenv("VOICE", "af_heart")
+LANGUAGE = os.getenv("LANGUAGE", "en-us")
 
 tts = get_tts_engine()
 running = True

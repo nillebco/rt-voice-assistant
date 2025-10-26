@@ -410,7 +410,7 @@ class TestWhisperCpp:
         # Verify that sudo is prepended to the command
         assert call_args[0] == "sudo"
         assert call_args[1] == "docker"
-        
+
         # Verify the full command structure
         expected_command = [
             "sudo",
@@ -427,7 +427,7 @@ class TestWhisperCpp:
             "ghcr.io/ggml-org/whisper.cpp:main",
             '"whisper-cli -m /models/ggml-small.en.bin -f /audios/test_audio.wav -ojf -of /outputs/out-test-uuid"',
         ]
-        
+
         assert call_args == expected_command
 
         # Assertions
@@ -472,7 +472,7 @@ class TestWhisperCpp:
         # Verify that sudo is NOT prepended to the command
         assert call_args[0] == "docker"
         assert "sudo" not in call_args
-        
+
         # Verify the full command structure (without sudo)
         expected_command = [
             "docker",
@@ -488,7 +488,7 @@ class TestWhisperCpp:
             "ghcr.io/ggml-org/whisper.cpp:main",
             '"whisper-cli -m /models/ggml-small.en.bin -f /audios/test_audio.wav -ojf -of /outputs/out-test-uuid"',
         ]
-        
+
         assert call_args == expected_command
 
         # Assertions

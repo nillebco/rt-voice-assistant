@@ -5,6 +5,8 @@ import urllib.request
 from kokoro_onnx import Kokoro
 
 FOLDER = "models"
+
+
 def download_model_files():
     """Download model files if they don't exist."""
     model_urls = {
@@ -26,7 +28,9 @@ def download_model_files():
             print(f"{filename} already exists")
     return True
 
+
 tts = None
+
 
 def get_tts_engine():
     """Get the TTS engine based on platform."""
@@ -35,14 +39,19 @@ def get_tts_engine():
     if tts is None:
         if platform.system() == "Darwin":
             providers = ["CoreMLExecutionProvider", "CPUExecutionProvider"]
-            session = ort.InferenceSession(os.path.join(FOLDER, "kokoro-v1.0.onnx"), providers=providers)
-            tts = Kokoro.from_session(session, voices_path=os.path.join(FOLDER, "voices-v1.0.bin"))
+            session = ort.InferenceSession(
+                os.path.join(FOLDER, "kokoro-v1.0.onnx"), providers=providers
+            )
+            tts = Kokoro.from_session(
+                session, voices_path=os.path.join(FOLDER, "voices-v1.0.bin")
+            )
         else:
             tts = Kokoro(
                 model_path=os.path.join(FOLDER, "kokoro-v1.0.onnx"),
                 voices_path=os.path.join(FOLDER, "voices-v1.0.bin"),
             )
     return tts
+
 
 def on_startup():
     if not download_model_files():

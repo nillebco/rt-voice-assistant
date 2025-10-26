@@ -34,6 +34,7 @@ q = queue.Queue(maxsize=MAX_SIZE)
 running = True
 processing = False
 
+
 def handle_sigint(sig, frame):
     global running
     running = False

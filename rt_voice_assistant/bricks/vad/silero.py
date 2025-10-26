@@ -23,6 +23,7 @@ SAMPLERATE = 16000
 #         chunk = chunk.astype(np.int16)
 #     return chunk.astype(np.float32) / 32768.0
 
+
 def as_float32(chunk: np.ndarray) -> np.ndarray:
     """Return mono float32 in [-1,1] without unnecessary requantization."""
     # mono
@@ -37,7 +38,7 @@ def as_float32(chunk: np.ndarray) -> np.ndarray:
         # Map [-32768, 32767] -> [-1, 1)
         x = chunk.astype(np.float32) / 32768.0
     elif chunk.dtype == np.int32:
-        x = (chunk.astype(np.float32) / 2147483648.0)  # 2**31
+        x = chunk.astype(np.float32) / 2147483648.0  # 2**31
     elif chunk.dtype == np.uint8:
         # 8-bit PCM is unsigned: [0,255] -> [-1,1)
         x = (chunk.astype(np.float32) - 128.0) / 128.0
@@ -47,6 +48,7 @@ def as_float32(chunk: np.ndarray) -> np.ndarray:
         x = chunk.astype(np.float32) / maxmag
 
     return np.clip(x, -1.0, 1.0)
+
 
 def process_bool(chunk: np.ndarray, sampling_rate: int = SAMPLERATE) -> bool:
     """

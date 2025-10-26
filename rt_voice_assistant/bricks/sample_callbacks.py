@@ -38,4 +38,5 @@ def multiple_callbacks(callbacks: list[Callable[[np.ndarray], None]]):
     def process_frame(chunk: np.ndarray):
         for callback in callbacks:
             callback(chunk)
+
     return process_frame

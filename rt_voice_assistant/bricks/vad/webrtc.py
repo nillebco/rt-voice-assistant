@@ -5,6 +5,7 @@ SAMPLERATE = 16000  # 44_100 or 48_000 are common, pywebrtcvad uses 8000, 16000,
 
 try:
     import webrtcvad
+
     WEBRTC_AVAILABLE = True
 except ImportError:
     WEBRTC_AVAILABLE = False
@@ -22,7 +23,9 @@ def _is_speech_webrtc(chunk_bytes: list[bytes], sampling_rate: int = SAMPLERATE)
 
 def process_vad_webrtc(chunk: np.ndarray, sampling_rate: int = SAMPLERATE):
     if not WEBRTC_AVAILABLE:
-        raise ImportError("webrtcvad is not available on this platform. Use silero VAD instead.")
+        raise ImportError(
+            "webrtcvad is not available on this platform. Use silero VAD instead."
+        )
     """
     Process the audio chunk using WebRTC VAD.
     Ensures WebRTC VAD requirements:
@@ -44,33 +47,35 @@ def process_vad_webrtc(chunk: np.ndarray, sampling_rate: int = SAMPLERATE):
     # Ensure 16-bit PCM format
     if chunk.dtype != np.int16:
         chunk = chunk.astype(np.int16)
-    
+
     # Calculate frame duration in milliseconds
     frame_duration_ms = (len(chunk) / sampling_rate) * 1000
-    
+
     # WebRTC VAD only accepts 10, 20, or 30 ms frames
     # If our frame doesn't match, we need to adjust
     if frame_duration_ms not in [10, 20, 30]:
         # Find the closest supported frame duration
         target_durations = [10, 20, 30]
-        closest_duration = min(target_durations, key=lambda x: abs(x - frame_duration_ms))
-        
+        closest_duration = min(
+            target_durations, key=lambda x: abs(x - frame_duration_ms)
+        )
+
         # Calculate how many samples we need for the target duration
         target_samples = int((closest_duration / 1000) * sampling_rate)
-        
+
         # Pad or truncate to match target duration
         if len(chunk) < target_samples:
             # Pad with zeros if too short
             padded_chunk = np.zeros(target_samples, dtype=np.int16)
-            padded_chunk[:len(chunk)] = chunk
+            padded_chunk[: len(chunk)] = chunk
             chunk = padded_chunk
         else:
             # Truncate if too long
             chunk = chunk[:target_samples]
-        
+
         frame_duration_ms = closest_duration
-    
+
     # Convert to bytes for WebRTC VAD
     chunk_bytes = chunk.tobytes()
-    
+
     return _is_speech_webrtc(chunk_bytes)
