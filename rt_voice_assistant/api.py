@@ -33,6 +33,11 @@ load_dotenv()
 
 HISTORY = []
 URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
+PROVIDERS_URLS = {
+    "openrouter": URL,
+    "openai": "https://api.openai.com/v1",
+    "azure": "https://api.azure.com/v1",
+}
 SYSTEM_PROMPT = os.getenv(
     "SYSTEM_PROMPT",
     f"You are a concise, helpful assistant. Today it's {datetime.now().strftime('%Y-%m-%d')}.",
@@ -185,7 +190,8 @@ async def transcribe_audio(
 async def completions(
     file: UploadFile = File(...),
     stt_model: str = Query("base"),
-    model: str = Query(MODEL),
+    llm_provider: str = Query("openrouter"),
+    llm_model: str = Query(MODEL),
     language: str = Query("en"),
     voice: str = Query(VOICE),
 ):
@@ -199,9 +205,11 @@ async def completions(
 
     HISTORY.append({"role": "user", "content": transcription})
     messages = trim_to_budget(HISTORY, SYSTEM_PROMPT, budget=6000)
-    client = get_client(url=URL)
+    url = PROVIDERS_URLS.get(llm_provider, URL)
+    logging.info(f"Using LLM provider: {llm_provider} with URL: {url}")
+    client = get_client(url=url)
     response = client.chat.completions.create(
-        model=model,
+        model=llm_model,
         messages=messages,
     )
     text = response.choices[0].message.content

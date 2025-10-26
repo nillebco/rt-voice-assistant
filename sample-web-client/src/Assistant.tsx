@@ -1,37 +1,45 @@
 import { useMicVAD, utils } from "@ricky0123/vad-react";
-import { useTranscription } from "./hooks/useTranscription";
-import { useState } from "react";
+import { useAssistant } from "./hooks/useAssistant";
+import { useState, useRef } from "react";
 
 interface TranscriptionItem {
   id: string;
   text: string;
   timestamp: Date;
+  audioUrl?: string; // URL for playing the audio response
 }
 
 const Assistant = () => {
   const [transcriptionHistory, setTranscriptionHistory] = useState<TranscriptionItem[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
+  const audioRef = useRef<HTMLAudioElement>(null);
   
   const {
-    transcribeAudio,
-    isTranscribing,
+    processAudioCompletion,
+    isProcessingAudioCompletion,
     error,
     clearError
-  } = useTranscription({
-    model: 'base',
+  } = useAssistant({
+    sttModel: 'base',
     language: selectedLanguage,
-    onTranscriptionStart: () => console.log('Starting transcription...'),
-    onTranscriptionComplete: (result) => {
-      console.log('Transcription complete:', result);
-      // Add new transcription to history
+    voice: 'af_heart',
+    llmModel: 'openai/gpt-4o',
+    onAudioCompletionStart: () => console.log('Starting audio completion...'),
+    onAudioCompletionComplete: (result) => {
+      console.log('Audio completion complete:', result);
+      // Create audio URL from blob
+      const audioUrl = URL.createObjectURL(result.audioBlob);
+      
+      // Add new transcription to history with audio URL
       const newTranscription: TranscriptionItem = {
         id: Date.now().toString(),
-        text: result.text,
-        timestamp: new Date()
+        text: 'Audio response received', // We don't get the transcription text from completions endpoint
+        timestamp: new Date(),
+        audioUrl: audioUrl
       };
       setTranscriptionHistory(prev => [...prev, newTranscription]);
     },
-    onTranscriptionError: (error) => console.error('Transcription error:', error)
+    onAudioCompletionError: (error) => console.error('Audio completion error:', error)
   });
 
   const vad = useMicVAD({
@@ -41,19 +49,40 @@ const Assistant = () => {
       try {
         const wav = utils.encodeWAV(audio);
         const wavBlob = new Blob([wav], { type: 'audio/wav' })
-        await transcribeAudio(wavBlob);
+        await processAudioCompletion(wavBlob);
       } catch (err) {
-        console.error('Failed to transcribe audio:', err);
+        console.error('Failed to process audio completion:', err);
       }
     },
   });
 
   const clearHistory = () => {
+    // Clean up audio URLs to prevent memory leaks
+    transcriptionHistory.forEach(item => {
+      if (item.audioUrl) {
+        URL.revokeObjectURL(item.audioUrl);
+      }
+    });
     setTranscriptionHistory([]);
   };
 
+  const playAudio = (audioUrl: string) => {
+    if (audioRef.current) {
+      audioRef.current.src = audioUrl;
+      audioRef.current.play().catch(err => {
+        console.error('Failed to play audio:', err);
+      });
+    }
+  };
+
   const removeTranscription = (id: string) => {
-    setTranscriptionHistory(prev => prev.filter(item => item.id !== id));
+    setTranscriptionHistory(prev => {
+      const itemToRemove = prev.find(item => item.id === id);
+      if (itemToRemove?.audioUrl) {
+        URL.revokeObjectURL(itemToRemove.audioUrl);
+      }
+      return prev.filter(item => item.id !== id);
+    });
   };
 
   const formatTimestamp = (date: Date) => {
@@ -62,9 +91,10 @@ const Assistant = () => {
 
   return (
     <div className="voice-assistant">
+      <audio ref={audioRef} />
       <div className="status">
         {vad.userSpeaking && <div className="speaking">🎤 User is speaking...</div>}
-        {isTranscribing && <div className="transcribing">🔄 Transcribing...</div>}
+        {isProcessingAudioCompletion && <div className="processing">🔄 Processing audio completion...</div>}
       </div>
       
       {error && (
@@ -95,6 +125,15 @@ const Assistant = () => {
                 <div className="transcription-content">
                   <p className="transcription-text">{item.text}</p>
                   <span className="transcription-time">{formatTimestamp(item.timestamp)}</span>
+                  {item.audioUrl && (
+                    <button 
+                      onClick={() => playAudio(item.audioUrl!)}
+                      className="play-audio-btn"
+                      title="Play audio response"
+                    >
+                      🔊 Play Response
+                    </button>
+                  )}
                 </div>
                 <button 
                   onClick={() => removeTranscription(item.id)}
